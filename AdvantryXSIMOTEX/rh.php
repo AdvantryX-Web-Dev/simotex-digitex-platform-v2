@@ -242,7 +242,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                     `aleas__req_interv`
                                                 LEFT JOIN `aleas__end_mon_interv` ON `aleas__end_mon_interv`.`req_interv_id` = `aleas__req_interv`.`id`
                                                 LEFT JOIN `aleas__mon_interv` ON `aleas__mon_interv`.`req_interv_id` = `aleas__req_interv`.`id`
-                                                WHERE DATE(`aleas__req_interv`.`created_at`)= CURRENT_DATE AND `operator`=$operator
+                                                WHERE DATE(`aleas__req_interv`.`created_at`)= CURRENT_DATE AND `operator`='$operator'
                                                 GROUP BY
                                                     `aleas__req_interv`.`operator`,
                                                     DATE(`aleas__end_mon_interv`.`created_at`)

@@ -124,7 +124,7 @@ if (isset($_POST['Bouton6'])) {
   $card_rfid = $_POST['card_rfid'];
 
   // Vérifie si la carte RFID est déjà utilisée
-  $sql_check = "SELECT * FROM `init__employee` WHERE `card_rfid` = '$card_rfid' AND `matricule` != $matricule";
+  $sql_check = "SELECT * FROM `init__employee` WHERE `card_rfid` = '$card_rfid' AND `matricule` != '$matricule'";
   $result_check = $con->query($sql_check);
   if ($result_check->num_rows > 0) {
     $sql = "UPDATE `prod__affectation_card` SET `card_rfid` = '' WHERE `id` = 1";
@@ -133,12 +133,12 @@ if (isset($_POST['Bouton6'])) {
     echo "<script>alert('Carte déjà utilisée par une autre opératrice'); window.location.href = 'edit.php?operatrice='+'$matricule';</script>";
   } else {
     if ($card_rfid != '') {
-      $sql = "UPDATE `init__employee` SET `card_rfid` = '$card_rfid', `first_name` ='$first_name',  `last_name` ='$last_name',  `qualification` = '$qualification' WHERE `matricule` = $matricule";
+      $sql = "UPDATE `init__employee` SET `card_rfid` = '$card_rfid', `first_name` ='$first_name',  `last_name` ='$last_name',  `qualification` = '$qualification' WHERE `matricule` = '$matricule'";
       $rslt = $con->query($sql);
       $sql = "UPDATE `prod__affectation_card` SET `card_rfid` = '' WHERE `id` = 1";
       $rslt = $con->query($sql);
     } else {
-      $sql = "UPDATE `init__employee` SET `card_rfid` = NULL, `first_name` ='$first_name',  `last_name` ='$last_name',  `qualification` = '$qualification' WHERE `matricule` = $matricule";
+      $sql = "UPDATE `init__employee` SET `card_rfid` = NULL, `first_name` ='$first_name',  `last_name` ='$last_name',  `qualification` = '$qualification' WHERE `matricule` = '$matricule'";
       $rslt = $con->query($sql);
       $sql = "UPDATE `prod__affectation_card` SET `card_rfid` = '' WHERE `id` = 1";
       $rslt = $con->query($sql);
@@ -181,6 +181,7 @@ if (isset($_POST['Bouton7'])) {
 }
 
 if (isset($_POST['Bouton8'])) {
+
   // Récupère les données du formulaire
   $matricule = $_POST['matricule'];
   $first_name = $_POST['first_name'];
@@ -189,13 +190,14 @@ if (isset($_POST['Bouton8'])) {
   $card_rfid = $_POST['card_rfid'];
 
   // Vérifie si la carte RFID est déjà utilisée
-  $sql_check = "SELECT * FROM `init__employee` WHERE `card_rfid` = '$card_rfid' OR `matricule` = $matricule";
+  $sql_check = "SELECT * FROM `init__employee` WHERE `card_rfid` = '$card_rfid' OR `matricule` = '$matricule'";
   $result_check = $con->query($sql_check);
+
   if ($result_check->num_rows > 0) {
     $sql = "UPDATE `prod__affectation_card` SET `card_rfid` = NULL WHERE `id` = 1";
     $rslt = $con->query($sql);
     // Affiche le message d'erreur dans un popup
-    $sql_mat = "SELECT * FROM `init__employee` WHERE `matricule` = $matricule";
+    $sql_mat = "SELECT * FROM `init__employee` WHERE `matricule` = '$matricule'";
     $rslt_mat = $con->query($sql_mat);
     if ($rslt_mat->num_rows > 0) {
       // echo "<script>alert('Matricule déjà utilisée par une autre opératrice'); window.location.href = 'edit.php?newop=init__employee';</script>";
@@ -210,13 +212,13 @@ if (isset($_POST['Bouton8'])) {
   } else {
     if ($card_rfid != "") {
       $sql1 = "INSERT INTO `init__employee`(`card_rfid`, `matricule`, `first_name`, `last_name`, `qualification`) 
-              VALUES ('$card_rfid', $matricule, '$first_name', '$last_name', '$qualification')";
+              VALUES ('$card_rfid', '$matricule', '$first_name', '$last_name', '$qualification')";
       $rslt = $con->query($sql1);
       $sql = "UPDATE `prod__affectation_card` SET `card_rfid` = '' WHERE `id` = 1";
       $rslt = $con->query($sql);
     } else {
       $sql1 = "INSERT INTO `init__employee`(`card_rfid`, `matricule`, `first_name`, `last_name`, `qualification`) 
-              VALUES (NULL, $matricule, '$first_name', '$last_name',  '$qualification')";
+              VALUES (NULL, '$matricule', '$first_name', '$last_name',  '$qualification')";
       $rslt = $con->query($sql1);
       $sql = "UPDATE `prod__affectation_card` SET `card_rfid` = '' WHERE `id` = 1";
       $rslt = $con->query($sql);

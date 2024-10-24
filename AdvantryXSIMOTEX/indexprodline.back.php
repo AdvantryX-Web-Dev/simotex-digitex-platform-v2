@@ -206,21 +206,24 @@ require_once './php/configobj.php';
                                                 subquery.`pack_num`,
                                                 subquery.`quantity`,
                                                 subquery.`defective_pcs`,
-                                                subquery.`cur_dt`
+                                                subquery.`defects_num`,
+                                                subquery.`cur_dt`,
+                                                subquery.returned
                                             FROM (
                                                 SELECT
-                                                    MIN(`prod__eol_control`.`pack_num`) as `pack_num`,
-                                                    MIN(`prod__eol_control`.`quantity`) as `quantity`,
-                                                    MIN(`prod__eol_control`.`defective_pcs`) as `defective_pcs`,
-                                                    MIN(`prod__eol_control`.`updated_at`) as `cur_dt`
+                                                    `prod__eol_control`.`pack_num`,
+                                                    /*MAX(*/`prod__eol_control`.`quantity`/*)*/ as `quantity`,
+                                                    /*MAX(*/`prod__eol_control`.`defective_pcs`/*)*/ as `defective_pcs`,
+                                                    /*MAX(*/`prod__eol_control`.`defects_num`/*)*/ as `defects_num`,
+                                                    /*MAX(*/`prod__eol_control`.`updated_at`/*)*/ as `cur_dt`,
+                                                    /*MAX(*/`prod__eol_control`.`returned`/*)*/ as returned
                                                 FROM
                                                     `prod__eol_control`
                                                 WHERE
-                                                    `group` = '$prodline'
-                                                    AND DATE(`prod__eol_control`.`updated_at`) = CURRENT_DATE
-                                                    AND `prod__eol_control`.`ctrl_state`=1
-                                                GROUP BY
-                                                    `prod__eol_control`.`pack_num`
+                                                `group` = '$prodline'
+                                                    AND DATE(`prod__eol_control`.`updated_at`) = CURRENT_DATE AND `prod__eol_control`.`ctrl_state`=1 /*AND `prod__eol_control`.`returned`=0*/
+                                                /*GROUP BY
+                                                    `prod__eol_control`.`pack_num`*/
                                             ) as subquery;";
                         $rslt2 = $con->query($query2);
 
@@ -233,10 +236,9 @@ require_once './php/configobj.php';
                         $ifab = 0;
                         $cq = 0;
                         while ($ifab < count($tab2)) {
-                            // if ($tab2[$ifab]['returned'] == 0) {
-                            //     $qfab += $tab2[$ifab]['quantity'];
-                            // }
-                            $qfab += $tab2[$ifab]['quantity'];
+                            if ($tab2[$ifab]['returned'] == 0) {
+                                $qfab += $tab2[$ifab]['quantity'];
+                            }
                             $qdf += $tab2[$ifab]['defective_pcs'];
                             if ($qfab > 0) {
                                 $cq = ($qdf / ($qfab)) * 100;

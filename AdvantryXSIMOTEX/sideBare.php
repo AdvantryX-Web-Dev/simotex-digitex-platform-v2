@@ -120,6 +120,7 @@
                 <a class="collapse-item" href="gammeequilibrage.php">Affectation Opération – Box</a>
                 <!-- <a class="collapse-item" href="allpacks.php">Paquets</a>
                 <a class="collapse-item" href="allgamme.php">Modèle-Gamme</a> -->
+                <a class="collapse-item" href="p_operation.php">Opérations</a>
             </div>
         </div>
     </li>

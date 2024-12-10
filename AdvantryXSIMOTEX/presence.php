@@ -95,7 +95,8 @@ require_once './php/config.php';
                                                     GROUP BY
                                                         operator
                                                 ) AND prod__presence.`prod_line` LIKE '%$prodline%' AND prod__presence.cur_date = CURRENT_DATE;";
-                                        echo 'Chaine: ' . ($prodline == 'CH_Q' ? 'Chaine Qualité' : $prodline);
+
+                                        echo $prodline == 'CH_Q' ? 'Chaine Qualité' : 'Chaine: ' . $prodline;
                                     } else {
                                         $sql = "SELECT
                                                     `operator`,
@@ -123,6 +124,7 @@ require_once './php/config.php';
                                                     GROUP BY
                                                         operator
                                                 )  AND prod__presence.cur_date = CURRENT_DATE;";
+
                                         echo '';
                                     }
                                     ?>

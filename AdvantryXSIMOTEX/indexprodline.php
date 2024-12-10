@@ -1,14 +1,230 @@
 <?php
-session_start();
+
 date_default_timezone_set('Africa/Tunis');
+
 require_once './php/config.php';
-require_once './php/configobj.php';
+
+// This function retrieves and returns the 'prod_line' parameter from the URL query string
+function getSelectedProdline(): string
+{
+    // Use filter_input to safely get the 'prod_line' parameter from the GET request
+    // FILTER_SANITIZE_SPECIAL_CHARS is used to convert special characters to HTML entities
+    // This helps prevent XSS attacks by sanitizing the input
+    return filter_input(INPUT_GET, 'prod_line', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+    // If the 'prod_line' parameter is not set, return an empty string
+}
+$prodline = getSelectedProdline();
+// echo $prodline;
+
+function getPresentOperators($con, $prodline): int
+{
+    // SQL query to count the number of operators present on the specified
+    // production line for the current date
+    $sql = "SELECT 
+                COUNT(*) AS present_operators 
+            FROM 
+                prod__presence 
+            WHERE 
+                p_state = 1 
+                AND cur_date = CURRENT_DATE 
+                AND prod_line = ? 
+                AND id IN (
+                    SELECT 
+                        MAX(id) 
+                    FROM 
+                        prod__presence 
+                    WHERE 
+                        prod_line = ? 
+                    GROUP BY 
+                        operator
+                )";
+
+    // Prepare the SQL statement
+    $stmt = $con->prepare($sql);
+
+    // Check if statement preparation is successful
+    if (!$stmt) {
+        // Log an error message if preparation failed
+        error_log("Database statement preparation failed: " . $con->error);
+        return 0; // Return 0 or an appropriate value on error
+    }
+
+    // Bind the production line parameter to the SQL query
+    $stmt->bind_param('ss', $prodline, $prodline);
+
+    // Execute the prepared statement
+    $stmt->execute();
+
+    // Get the result set from the executed query
+    $result = $stmt->get_result();
+
+    // Check if any rows are returned
+    if ($result->num_rows === 0) {
+        return 0; // Return 0 or an appropriate value if no rows are found
+    }
+
+    // Fetch the associative array from the result set
+    $row = $result->fetch_assoc();
+
+    // Return the number of present operators
+    return $row['present_operators'] ?? 0;
+}
+$presentOperators = getPresentOperators($con, $prodline);
+// echo $presentOperators;
+
+function calculateObjective($con, $prodline): array
+{
+    // Query to get the latest rendement_objectif and temps_de_gamme
+    $query = "SELECT 
+                `prod__prod_line`.`objective`, 
+                -- `init__prod_line`.`prod_line`, 
+                `init__model`.`model` 
+            FROM 
+                `prod__prod_line` 
+            INNER JOIN `init__prod_line` ON `prod__prod_line`.`prod_line_id` = `init__prod_line`.`id` 
+            INNER JOIN `init__model` ON `init__model`.`id` = `prod__prod_line`.`model_id` 
+            WHERE 
+                `prod__prod_line`.`cur_date` = CURDATE()
+                AND `init__prod_line`.`prod_line` = ? 
+            ORDER BY 
+                `prod__prod_line`.`id` DESC;";
+
+    // Prepare the query
+    $stmt = $con->prepare($query);
+    if (!$stmt) {
+        return [];
+    }
+
+    // Bind parameters and execute
+    $stmt->bind_param("s", $prodline);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    // Fetch all rows
+    $data = [];
+    while ($row = $result->fetch_assoc()) {
+        $data[] = [
+            'model' => $row['model'] ?? null,
+            'objective' => (int) round($row['objective'] ?? 0)
+        ];
+    }
+
+    // Return rows if data exists; otherwise, return default
+    return !empty($data) ? $data : [];
+}
+$objData = calculateObjective($con, $prodline);
+
+function getEngagedQuantity($con, $prodline): int
+{
+    // SQL query to calculate the total engaged quantity for the current date and specified production line
+    $sql = "SELECT 
+                SUM(subquery.pack_qty) AS total_pack_qty 
+            FROM 
+                (
+                    SELECT 
+                        MAX(pack_qty) AS pack_qty 
+                    FROM 
+                        prod__pack_operation 
+                    WHERE 
+                        cur_date = CURRENT_DATE  -- Filter records for the current date
+                        AND prod_line = ?        -- Filter by the specified production line
+                        AND pack_num NOT IN (
+                            SELECT 
+                                pack_num 
+                            FROM 
+                                prod__pack_operation 
+                            WHERE 
+                                cur_date < CURRENT_DATE  -- Exclude pack numbers from previous dates
+                                AND prod_line = ?        -- Ensure they belong to the same production line
+                            GROUP BY 
+                                pack_num
+                        ) 
+                    GROUP BY 
+                        pack_num  -- Group by pack number and select the maximum quantity for each
+                ) as subquery;";
+
+    // Prepare the SQL statement
+    $stmt = $con->prepare($sql);
+
+    // Check if statement preparation is successful
+    if (!$stmt) {
+        // Log an error message if preparation failed
+        error_log("Database statement preparation failed: " . $con->error);
+        return 0; // Return 0 or an appropriate value on error
+    }
+
+    // Bind the production line parameter to the SQL query
+    $stmt->bind_param('ss', $prodline, $prodline);
+
+    // Execute the prepared statement
+    $stmt->execute();
+
+    // Get the result set from the executed query
+    $result = $stmt->get_result();
+
+    // Check if any rows are returned
+    if ($result->num_rows === 0) {
+        return 0; // Return 0 or an appropriate value if no rows are found
+    }
+
+    // Fetch the associative array from the result set
+    $row = $result->fetch_assoc();
+
+    // Return the total engaged quantity
+    return $row['total_pack_qty'] ?? 0;
+}
+$engagedQuantity = getEngagedQuantity($con, $prodline);
+// echo $engagedQuantity;
+
+function getProducedQuantity($con, $prodline): int
+{
+    // SQL query to calculate the total produced quantity for the given production line on the current date
+    $sql = "SELECT 
+                SUM(`pack_qty`) AS total_pack_qty 
+            FROM 
+                `prod__pack_operation` 
+            WHERE 
+                `prod__pack_operation`.`cur_date` = CURRENT_DATE 
+                AND `prod__pack_operation`.`opn_code` = '5072' 
+                AND `prod__pack_operation`.`prod_line` = ?;";
+
+    // Prepare the SQL statement
+    $stmt = $con->prepare($sql);
+    // Check if statement preparation is successful
+    if (!$stmt) {
+        // Log an error message if preparation failed
+        error_log("Database statement preparation failed: " . $con->error);
+        return 0; // Return 0 or an appropriate value on error
+    }
+
+    // Bind the production line parameter to the SQL query
+    $stmt->bind_param('s', $prodline);
+
+    // Execute the prepared statement
+    $stmt->execute();
+
+    // Get the result set from the executed query
+    $result = $stmt->get_result();
+    // Check if any rows are returned
+    if ($result->num_rows === 0) {
+        return 0; // Return 0 or an appropriate value if no rows are found
+    }
+
+    // Fetch the associative array from the result set
+    $row = $result->fetch_assoc();
+
+    // Return the total produced quantity
+    return $row['total_pack_qty'] ?? 0;
+}
+$producedQuantity = getProducedQuantity($con, $prodline);
+// echo $producedQuantity;
+
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -28,14 +244,9 @@ require_once './php/configobj.php';
     <!-- Custom styles for this template-->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <?php require_once './php/config.php';
-    if (isset($_GET["prod_line"])) {
-        $prodline = $_GET["prod_line"];
-    ?>
 </head>
 
 <body id="page-top">
-
     <!-- Page Wrapper -->
     <div id="wrapper">
 
@@ -44,42 +255,51 @@ require_once './php/configobj.php';
 
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
-
             <!-- Main Content -->
             <div id="content">
-
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
-
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h2 class="h1 mb-0 mt-4 text-gray-800">Dashboard</h2>
-                        <h3 class="h3 mb-0 ml-4 mt-4 text-primary">Chaine:
-                            <?php echo ($prodline) ?>
-                        </h3>
+                        <h3 class="h3 mb-0 mt-4 text-primary">Chaine: <?php echo ($prodline == "CH_Q" ? "Chaine Qualité" : $prodline); ?></h3>
+
+                        <!-- START OF PRODLINES DROPDOWN LIST -->
                         <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm dropdown-toggle mt-4"
                             type="button" id="deroulantb" data-toggle="dropdown" aria-haspopup="true"
                             aria-expanded="false">
-                            <?php echo ($prodline) ?>
-
+                            <?php echo ($prodline == "CH_Q" ? "Chaine Qualité" : $prodline); ?>
                         </button>
-                        <?php $sql = "SELECT * FROM init__prod_line";
-                        $result = $con->query($sql);
+
+                        <?php
+                        $sql = "SELECT prod_line FROM init__prod_line
+                                WHERE prod_line NOT LIKE 'CH_Q'
+                                ORDER BY id ASC";
+
                         $prodlines = [];
-                        if ($result->num_rows > 0) {
-                            while ($row = $result->fetch_assoc()) {
-                                $prodlines[] = $row['prod_line'];
+                        if ($result = $con->query($sql)) {
+                            if ($result->num_rows > 0) {
+                                while ($row = $result->fetch_assoc()) {
+                                    $prodlines[] = $row['prod_line'];
+                                }
                             }
-                        } ?>
+                            $result->free(); // Free result set
+                        } else {
+                            // Log or handle error if needed
+                            error_log("Query failed: " . $con->error);
+                        }
+                        ?>
                         <div class="dropdown-menu" aria-labelledby="deroulantb">
-                            <!-- <a href="index.php"><button class="dropdown-item" type="button"> TOUS </button></a> -->
                             <?php foreach ($prodlines as $line) { ?>
-                                <a href="indexprodline.php?prod_line=<?php echo $line; ?>"><button class="dropdown-item"
-                                        type="button"><?php echo $line; ?></button></a>
+                                <a href="indexprodline.php?prod_line=<?php echo $line; ?>">
+                                    <button class="dropdown-item" type="button"><?php echo $line; ?></button>
+                                </a>
                             <?php } ?>
+                            <a href="indexprodline.php?prod_line=CH_Q">
+                                <button class="dropdown-item" type="button">Chaine Qualité</button>
+                            </a>
                         </div>
-                        <!-- <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i
-                                class="fas fa-download fa-sm text-white-50"></i> Generate Report</a> -->
+                        <!-- END OF PRODLINES DROPDOWN LIST -->
                     </div>
 
                     <!-- Content Row -->
@@ -91,30 +311,16 @@ require_once './php/configobj.php';
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                                objectif</div>
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">objectif</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="Obj1">
-
-                                                <?php
-                                                $query = "SELECT `prod__prod_line`.`objective`, `init__prod_line`.`prod_line`, `init__model`.`model` FROM `prod__prod_line` 
-                                            INNER JOIN `init__prod_line` ON `prod__prod_line`.`prod_line_id`= `init__prod_line`.`id`
-                                            INNER JOIN `init__model` ON `init__model`.`id`= `prod__prod_line`.`model_id`
-                                            WHERE `prod__prod_line`.`cur_date`= DATE_FORMAT(CURRENT_DATE, '%Y-%m-%d') AND `init__prod_line`.`prod_line` = '$prodline' ORDER BY `prod__prod_line`.`id` DESC ";
-                                                $rslt = $con->query($query);
-
-                                                $tab4 = [];
-                                                while ($item = $rslt->fetch_assoc()) {
-                                                    $tab4[] = $item;
-                                                }
-                                                $i3 = 0;
-                                                $obj = 0;
-                                                if (count($tab4) > 0) {
-                                                    for ($i = 0; $i < count($tab4); $i++) {
-                                                        echo $tab4[$i]['model'] . ': ' . $tab4[$i]['objective'] . '<br>';
-                                                    }
-                                                } else {
-                                                    echo 0;
-                                                } ?>
+                                                <?php if (empty($objData)): ?>
+                                                    _
+                                                <?php else: ?>
+                                                    <?php foreach ($objData as $row): ?>
+                                                        <?php echo htmlspecialchars($row['model'] ?? 'N/A') . ': ' . htmlspecialchars($row['objective'] ?? 0); ?>
+                                                        <br>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </div>
@@ -128,138 +334,15 @@ require_once './php/configobj.php';
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Quantité Engagée</div>
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Quantité Engagée</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="QENG1">
-                                                <?php
-                                                $quer = "SELECT 
-                                                    MAX(`pack_qty`) AS total_pack_qty 
-                                                FROM 
-                                                    `prod__pack_operation`
-                                                WHERE 
-                                                    `cur_date` = CURRENT_DATE
-                                                    AND `prod_line` = '$prodline'
-                                                    AND `pack_num` NOT IN (
-                                                        SELECT `pack_num`
-                                                        FROM `prod__pack_operation`
-                                                        WHERE `cur_date` < CURRENT_DATE
-                                                        AND `prod_line` = '$prodline'
-                                                        GROUP BY `pack_num`
-                                                    )
-                                                GROUP BY 
-                                                    `pack_num`;";
-                                                $rsl = $con->query($quer);
-
-                                                $tabl = [];
-                                                while ($items = $rsl->fetch_assoc()) {
-                                                    $tabl[] = $items;
-                                                }
-
-                                                $ieng = 0;
-                                                $qengaged = 0;
-                                                for ($ieng = 0; $ieng < count($tabl); $ieng++) {
-                                                    $qengaged += $tabl[$ieng]['total_pack_qty'];
-                                                }
-                                                echo ($qengaged); ?>
+                                                <?php echo $engagedQuantity; ?>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Quantité Encoure -->
-                        <!-- <div class="col-xl-3 col-md-6 mb-4">
-                                <div class="card border-left-success shadow h-100 py-2">
-                                    <div class="card-body">
-                                        <div class="row no-gutters align-items-center">
-                                            <div class="col mr-2">
-                                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                    Quantité Encours </div>
-                                                <div class="h5 mb-0 font-weight-bold text-gray-800" id="QENC1"> -->
-                        <?php
-                        $query = "SELECT
-                                                SUM(t1.`pack_qty`) AS qte_enc
-                                            FROM
-                                                (
-                                                SELECT DISTINCT
-                                                    `pack_num`,
-                                                    `pack_qty`
-                                                FROM
-                                                    `prod__pack_operation` WHERE `prod_line` = '$prodline'
-                                            ) t1
-                                            WHERE
-                                                t1.`pack_num` NOT IN(
-                                                SELECT
-                                                    `pack_num`
-                                                FROM
-                                                    `prod__eol_control` WHERE `prod__eol_control`.`ctrl_state`=1 AND `prod__eol_control`.`returned`=0
-                                            )";
-                        $rslt = $con->query($query);
-
-                        $tab = [];
-                        while ($item = $rslt->fetch_assoc()) {
-                            $tab[] = $item;
-                        }
-
-                        $query2 = "SELECT
-                                                subquery.`pack_num`,
-                                                subquery.`quantity`,
-                                                subquery.`defective_pcs`,
-                                                subquery.`cur_dt`
-                                            FROM (
-                                                SELECT
-                                                    MIN(`prod__eol_control`.`pack_num`) as `pack_num`,
-                                                    MIN(`prod__eol_control`.`quantity`) as `quantity`,
-                                                    MIN(`prod__eol_control`.`defective_pcs`) as `defective_pcs`,
-                                                    MIN(`prod__eol_control`.`updated_at`) as `cur_dt`
-                                                FROM
-                                                    `prod__eol_control`
-                                                WHERE
-                                                    `group` = '$prodline'
-                                                    AND DATE(`prod__eol_control`.`updated_at`) = CURRENT_DATE
-                                                    AND `prod__eol_control`.`ctrl_state`=1
-                                                GROUP BY
-                                                    `prod__eol_control`.`pack_num`
-                                            ) as subquery;";
-                        $rslt2 = $con->query($query2);
-
-                        $tab2 = [];
-                        while ($item2 = $rslt2->fetch_assoc()) {
-                            $tab2[] = $item2;
-                        }
-                        $qdf = 0;
-                        $qfab = 0;
-                        $ifab = 0;
-                        $cq = 0;
-                        while ($ifab < count($tab2)) {
-                            // if ($tab2[$ifab]['returned'] == 0) {
-                            //     $qfab += $tab2[$ifab]['quantity'];
-                            // }
-                            $qfab += $tab2[$ifab]['quantity'];
-                            $qdf += $tab2[$ifab]['defective_pcs'];
-                            if ($qfab > 0) {
-                                $cq = ($qdf / ($qfab)) * 100;
-                            } else {
-                                $cq = 0;
-                            }
-                            $ifab++;
-                        }
-
-                        $ienc = 0;
-                        $qencours = 0;
-                        while ($ienc < count($tab)) {
-                            $qencours += $tab[$ienc]['qte_enc'];
-
-                            $ienc++;
-                        }
-                        /*   echo ($qencours);*/ ?>
-                        <!-- </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div> -->
 
                         <!-- Quantité Fabriquée -->
                         <div class="col-xl-4 col-md-6 mb-4">
@@ -271,21 +354,7 @@ require_once './php/configobj.php';
                                                 Quantité Fabriquée
                                             </div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="QFAB1">
-                                                <?php
-                                                $query = "SELECT
-  SUM(`pack_qty`) AS qte_fab 
-FROM
-    `prod__pack_operation` WHERE `prod__pack_operation`.`cur_date` = CURRENT_DATE AND `prod__pack_operation`.`opn_code`='5072' AND `prod__pack_operation`.`prod_line` ='$prodline' 
-";
-                                                $rslt3 = $con->query($query);
-
-                                                $qfabA = 0;
-                                                while ($item3 = $rslt3->fetch_assoc()) {
-                                                    $qfabA += $item3['qte_fab'];
-                                                }
-
-
-                                                echo ($qfabA); ?>
+                                                <?php echo $producedQuantity; ?>
                                             </div>
                                         </div>
                                     </div>
@@ -293,8 +362,6 @@ FROM
                             </div>
                         </div>
                     </div>
-
-                    <!-- Content Row -->
 
                     <!-- Content Row -->
                     <div class="row">
@@ -304,17 +371,50 @@ FROM
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                                Contrôle Qualité</div>
+                                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Contrôle Qualité</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="CQ1">
-                                                <?php echo (round($cq, 2)); ?>
+                                                <?php
+
+                                                $query2 = "SELECT
+                                                                -- subquery.`pack_num`,
+                                                                subquery.`quantity`,
+                                                                subquery.`defective_pcs`
+                                                                -- subquery.`cur_dt`
+                                                            FROM (
+                                                                SELECT
+                                                                    -- MIN(`prod__eol_control`.`pack_num`) as `pack_num`,
+                                                                    MIN(`prod__eol_control`.`quantity`) as `quantity`,
+                                                                    MIN(`prod__eol_control`.`defective_pcs`) as `defective_pcs`
+                                                                    -- MIN(`prod__eol_control`.`updated_at`) as `cur_dt`
+                                                                FROM
+                                                                    `prod__eol_control`
+                                                                WHERE
+                                                                    `group` = '$prodline'
+                                                                    AND DATE(`prod__eol_control`.`updated_at`) = CURRENT_DATE
+                                                                    AND `prod__eol_control`.`ctrl_state` = 1
+                                                                GROUP BY
+                                                                    `prod__eol_control`.`pack_num`
+                                                            ) as subquery;";
+                                                $rslt2 = $con->query($query2);
+
+                                                $tab2 = [];
+                                                while ($item2 = $rslt2->fetch_assoc()) {
+                                                    $tab2[] = $item2;
+                                                }
+
+                                                $qfab = array_sum(array_column($tab2, 'quantity'));
+                                                $qdf = array_sum(array_column($tab2, 'defective_pcs'));
+                                                $cq = $qfab > 0 ? ($qdf / $qfab) * 100 : 0;
+
+                                                echo (round($cq, 2));
+
+                                                ?>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
 
                         <!-- Présence -->
                         <div class="col-xl-6 col-md-6 mb-4">
@@ -323,30 +423,11 @@ FROM
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">
-                                                Nombre des opératrices présentes
+                                                Nombre d'opératrices présentes
                                             </div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="op1"> <a
                                                     href="presence.php?prodline=<?php echo $prodline; ?>">
-                                                    <?php $queryP = "SELECT
-    COUNT(*) AS presence
-FROM
-    prod__presence
-WHERE
-    p_state = 1 AND id IN(
-    SELECT
-        MAX(id)
-    FROM
-        prod__presence
-    GROUP BY
-        operator
-) AND `prod_line` = '$prodline' AND cur_date = CURRENT_DATE;";
-                                                    $rsltP = $con->query($queryP);
-                                                    $tabP = [];
-                                                    while ($itemP = $rsltP->fetch_assoc()) {
-                                                        $tabP[] = $itemP;
-                                                    }
-                                                    echo ($tabP[0]['presence']);
-                                                    ?>
+                                                    <?php echo $presentOperators; ?>
                                                 </a>
                                             </div>
                                         </div>
@@ -354,31 +435,17 @@ WHERE
                                 </div>
                             </div>
                         </div>
+
                     </div>
 
-
-                    <!-- CETTE PARTIE PHP POUR LE CHART -->
-
+                    <!-- Quantité Fabriquée Chart -->
                     <div class="row">
-                        <!-- Quantité Chart -->
                         <div class="col">
                             <div class="card shadow mb-4">
                                 <!-- Card Header - Dropdown -->
                                 <div
                                     class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                                     <h6 class="m-0 font-weight-bold text-primary">Quantité Fabriquée</h6>
-                                    <div class="dropdown no-arrow">
-                                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
-                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                                            aria-labelledby="dropdownMenuLink">
-                                            <div class="dropdown-header">Voir plus:</div>
-                                            <a class="dropdown-item" href="allpacks.php">Paquets</a>
-                                            <div class="dropdown-divider"></div>
-                                        </div>
-                                    </div>
                                 </div>
                                 <!-- Card Body -->
                                 <div class="card-body">
@@ -392,16 +459,12 @@ WHERE
 
                     <!-- CETTE PARTIE PHP POUR LE CHART -->
                     <?php
-                    // header("content-Type: application/json");
-                    date_default_timezone_set('Africa/Tunis');
-                    require_once './php/config.php';
-
-                    $query2 = "SELECT
-  SUM(`pack_qty`) AS quantity ,cur_date
-FROM
-    `prod__pack_operation` WHERE `prod__pack_operation`.`opn_code`='5072' AND `prod__pack_operation`.`prod_line` ='$prodline' GROUP BY 
-  `cur_date` ORDER by cur_date desc 
-                        LIMIT 7;";
+                    $query2 = "SELECT SUM(`pack_qty`) AS quantity, cur_date
+                                FROM `prod__pack_operation`
+                                WHERE `prod__pack_operation`.`opn_code` = '5072'
+                                    AND `prod__pack_operation`.`prod_line` = '$prodline'
+                                GROUP BY `cur_date`
+                                ORDER by cur_date DESC LIMIT 7;";
                     $rslt2 = $con->query($query2);
 
                     $tab2 = [];
@@ -454,6 +517,7 @@ FROM
                     ];
                     $qtefab = [$qfab7, $qfab6, $qfab5, $qfab4, $qfab3, $qfab2, $qfab1];
                     ?>
+
                     <script>
                         var ctx = document.getElementById("myAreaChartQte");
                         var myLineChart = new Chart(ctx, {
@@ -473,8 +537,7 @@ FROM
                                     pointHoverBorderColor: "rgba(78, 115, 223, 1)",
                                     pointHitRadius: 10,
                                     pointBorderWidth: 2,
-                                    data: <?php echo json_encode($qtefab);
-                                        } ?>,
+                                    data: <?php echo json_encode($qtefab); ?>,
                                 }],
                             },
                             options: {
@@ -545,9 +608,8 @@ FROM
                             }
                         });
                     </script>
-                    <!-- Engagée chart-->
-                    <!-- CETTE PARTIE PHP POUR LE CHART -->
 
+                    <!-- Quantité Engagée Chart -->
                     <div class="row">
                         <!-- Quantité Chart -->
                         <div class="col">
@@ -556,13 +618,6 @@ FROM
                                 <div
                                     class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                                     <h6 class="m-0 font-weight-bold text-primary">Quantité Engagée</h6>
-                                    <div class="dropdown no-arrow">
-                                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
-                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                                        </a>
-
-                                    </div>
                                 </div>
                                 <!-- Card Body -->
                                 <div class="card-body">
@@ -576,12 +631,7 @@ FROM
 
                     <!-- CETTE PARTIE PHP POUR LE CHART -->
                     <?php
-
-                    // header("content-Type: application/json");
-                    date_default_timezone_set('Africa/Tunis');
-                    require_once './php/config.php';
-
-                    $query2 = "SELECT `qty_eng` ,cur_date FROM `prod__indicator` where cur_date >= NOW() - INTERVAL 7 DAY AND prod_line='$prodline';";
+                    $query2 = "SELECT `qty_eng`, cur_date FROM `prod__indicator` where cur_date >= NOW() - INTERVAL 7 DAY AND prod_line= '$prodline';";
                     $rslt2 = $con->query($query2);
 
                     $tab2 = [];
@@ -595,6 +645,7 @@ FROM
                     $qeng4 = 0;
                     $qeng5 = 0;
                     $qeng6 = 0;
+                    $qeng7 = 0;
                     $i1 = 0;
                     for ($i1 = 0; $i1 < count($tab2); $i1++) {
                         switch ($tab2[$i1]['cur_date']) {
@@ -616,12 +667,15 @@ FROM
                             case date('Y-m-d', strtotime("-5 day")):
                                 $qeng6 += $tab2[$i1]['qty_eng'];
                                 break;
+                            case date('Y-m-d', strtotime("-6 day")):
+                                $qeng7 += $tab2[$i1]['qty_eng'];
+                                break;
                         }
                     }
-                    $date = [date('d-m-Y', strtotime("-5 day")), date('d-m-Y', strtotime("-4 day")), date('d-m-Y', strtotime("-3 day")), date('d-m-Y', strtotime("-2 day")), date('d-m-Y', strtotime("-1 day")), date('d-m-Y')];
-                    $qteeng = [$qeng6, $qeng5, $qeng4, $qeng3, $qeng2, $qeng1];
-                    // echo json_encode($qtefab);
+                    $date = [date('d-m-Y', strtotime("-6 day")), date('d-m-Y', strtotime("-5 day")), date('d-m-Y', strtotime("-4 day")), date('d-m-Y', strtotime("-3 day")), date('d-m-Y', strtotime("-2 day")), date('d-m-Y', strtotime("-1 day")), date('d-m-Y')];
+                    $qteeng = [$qeng7, $qeng6, $qeng5, $qeng4, $qeng3, $qeng2, $qeng1];
                     ?>
+
                     <script>
                         var ctx = document.getElementById("myAreaChart");
                         var myLineChart = new Chart(ctx, {
@@ -641,8 +695,7 @@ FROM
                                     pointHoverBorderColor: "rgba(78, 115, 223, 1)",
                                     pointHitRadius: 10,
                                     pointBorderWidth: 2,
-                                    data: <?php echo json_encode($qteeng);
-                                            ?>,
+                                    data: <?php echo json_encode($qteeng); ?>,
                                 }],
                             },
                             options: {

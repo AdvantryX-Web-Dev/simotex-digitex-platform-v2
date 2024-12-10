@@ -112,7 +112,7 @@ function calculateObjective($con, $prodline): array
     // Return rows if data exists; otherwise, return default
     return !empty($data) ? $data : [];
 }
-// $objData = calculateObjective($con, $prodline);
+$objData = calculateObjective($con, $prodline);
 
 function getEngagedQuantity($con, $prodline): int
 {
@@ -262,13 +262,13 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h2 class="h1 mb-0 mt-4 text-gray-800">Dashboard</h2>
-                        <h3 class="h3 mb-0 mt-4 text-primary">Chaine: <?php echo ($prodline == "CH_Q" ? "Chaine Qualité" : $prodline); ?></h3>
+                        <h3 class="h3 mb-0 mt-4 text-primary">Chaine Qualité</h3>
 
                         <!-- START OF PRODLINES DROPDOWN LIST -->
                         <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm dropdown-toggle mt-4"
                             type="button" id="deroulantb" data-toggle="dropdown" aria-haspopup="true"
                             aria-expanded="false">
-                            <?php echo ($prodline == "CH_Q" ? "Chaine Qualité" : $prodline); ?>
+                            Chaine Qualité
                         </button>
 
                         <?php
@@ -313,7 +313,14 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">objectif</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="Obj1">
-                                                _
+                                                <?php if (empty($objData)): ?>
+                                                    _
+                                                <?php else: ?>
+                                                    <?php foreach ($objData as $row): ?>
+                                                        <?php echo htmlspecialchars($row['model'] ?? 'N/A') . ': ' . htmlspecialchars($row['objective'] ?? 0); ?>
+                                                        <br>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </div>

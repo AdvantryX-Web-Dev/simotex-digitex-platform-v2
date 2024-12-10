@@ -1,6 +1,9 @@
 <?php
-session_start();
+
+require_once './php/config.php';
+
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -53,106 +56,107 @@ session_start();
                 <div class="container-fluid">
 
                     <!-- Page Heading -->
-                    <h1 class="h3 mt-4 text-gray-800">Ressources Humaine </h1>
+                    <h1 class="h3 mt-4 text-gray-800">Ressources Humaine</h1>
                     <p class="mb-4"></p>
 
                     <!-- DataTales Example -->
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Présence:</h6>
+                            <h6 class="m-0 font-weight-bold text-primary">Présence :</h6>
                             <!-- <div class="col-md-3 float-right"> -->
                             <div class="d-sm-flex align-items-center justify-content-between mb-4">
                                 <h3 class="h3 mb-0 ml-4 mt-4 text-primary">
                                     <?php
-                                    require_once './php/config.php';
                                     if (isset($_GET["prodline"])) {
                                         $prodline = $_GET["prodline"];
                                         $sql = "SELECT
-                                         `operator`,
-                                         `prod_line`,
-                                         prod__presence.`machine_id`,
-                                         CONCAT(
-                                             init__employee.first_name,
-                                             ' ',
-                                             init__employee.last_name
-                                         ) AS employee,
-                                         /* init__machine.designation, */
-                                         init__employee.qualification,
-                                         prod__presence.cur_date,
-                                         prod__presence.cur_time
-                                     FROM
-                                         prod__presence
-                                     INNER JOIN init__employee ON init__employee.matricule = prod__presence.operator
-                                     /* INNER JOIN init__machine ON prod__presence.machine_id = init__machine.machine_id */
-                                     WHERE
-                                         p_state = 1 AND prod__presence.id IN(
-                                         SELECT
-                                             MAX(id)
-                                         FROM
-                                             prod__presence
-                                         GROUP BY
-                                             operator
-                                     ) AND prod__presence.`prod_line` LIKE '%$prodline%' AND prod__presence.cur_date = CURRENT_DATE;";
-                                        echo ('Chaine:' . $prodline);
+                                                    `operator`,
+                                                    `prod_line`,
+                                                    prod__presence.`machine_id`,
+                                                    CONCAT(
+                                                        init__employee.first_name,
+                                                        ' ',
+                                                        init__employee.last_name
+                                                    ) AS employee,
+                                                    /* init__machine.designation, */
+                                                    init__employee.qualification,
+                                                    prod__presence.cur_date,
+                                                    prod__presence.cur_time
+                                                FROM
+                                                    prod__presence
+                                                INNER JOIN init__employee ON init__employee.matricule = prod__presence.operator
+                                                /* INNER JOIN init__machine ON prod__presence.machine_id = init__machine.machine_id */
+                                                WHERE
+                                                    p_state = 1 AND prod__presence.id IN(
+                                                    SELECT
+                                                        MAX(id)
+                                                    FROM
+                                                        prod__presence
+                                                    GROUP BY
+                                                        operator
+                                                ) AND prod__presence.`prod_line` LIKE '%$prodline%' AND prod__presence.cur_date = CURRENT_DATE;";
+                                        echo ('Chaine: ' . $prodline);
                                     } else {
                                         $sql = "SELECT
-                                         `operator`,
-                                         `prod_line`,
-                                         prod__presence.`machine_id`,
-                                         CONCAT(
-                                             init__employee.first_name,
-                                             ' ',
-                                             init__employee.last_name
-                                         ) AS employee,
-                                         /*init__machine.designation,*/
-                                         init__employee.qualification,
-                                         prod__presence.cur_date,
-                                         prod__presence.cur_time
-                                     FROM
-                                         prod__presence
-                                     INNER JOIN init__employee ON init__employee.matricule = prod__presence.operator
-                                     /* INNER JOIN init__machine ON prod__presence.machine_id = init__machine.machine_id */
-                                     WHERE
-                                         p_state = 1 AND prod__presence.id IN(
-                                         SELECT
-                                             MAX(id)
-                                         FROM
-                                             prod__presence
-                                         GROUP BY
-                                             operator
-                                     )  AND prod__presence.cur_date = CURRENT_DATE;";
+                                                    `operator`,
+                                                    `prod_line`,
+                                                    prod__presence.`machine_id`,
+                                                    CONCAT(
+                                                        init__employee.first_name,
+                                                        ' ',
+                                                        init__employee.last_name
+                                                    ) AS employee,
+                                                    /*init__machine.designation,*/
+                                                    init__employee.qualification,
+                                                    prod__presence.cur_date,
+                                                    prod__presence.cur_time
+                                                FROM
+                                                    prod__presence
+                                                INNER JOIN init__employee ON init__employee.matricule = prod__presence.operator
+                                                /* INNER JOIN init__machine ON prod__presence.machine_id = init__machine.machine_id */
+                                                WHERE
+                                                    p_state = 1 AND prod__presence.id IN(
+                                                    SELECT
+                                                        MAX(id)
+                                                    FROM
+                                                        prod__presence
+                                                    GROUP BY
+                                                        operator
+                                                )  AND prod__presence.cur_date = CURRENT_DATE;";
                                         echo '';
-                                    } ?>
+                                    }
+                                    ?>
                                 </h3>
                                 <button
                                     class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm dropdown-toggle mt-4"
                                     type="button" id="deroulantb" data-toggle="dropdown" aria-haspopup="true"
-                                    aria-expanded="false">Chaine de production
+                                    aria-expanded="false">
+                                    Chaine de production
                                 </button>
                                 <div class="dropdown-menu" aria-labelledby="deroulantb">
-                                    <a href="presence.php"><button class="dropdown-item" type="button"> TOUS
-                                        </button></a>
+                                    <a href="presence.php">
+                                        <button class="dropdown-item" type="button">TOUS</button>
+                                    </a>
 
                                     <?php
-                                    $query = "SELECT `prod_line` FROM `init__prod_line` ";
+                                    $query = "SELECT prod_line FROM init__prod_line ORDER BY id ASC;";
                                     $rslt = $con->query($query);
 
                                     $tab4 = [];
                                     while ($item = $rslt->fetch_assoc()) {
                                         $tab4[] = $item;
                                     }
-                                    for ($i = 0; $i < count($tab4); $i++) {
                                     ?>
-                                        <a class="collapse-item"
-                                            href="presence.php?prodline=<?php echo $tab4[$i]['prod_line']; ?>"><button
-                                                class="dropdown-item" type="button">
-                                            <?php echo $tab4[$i]['prod_line'] . '</button></a>';
-                                        } ?>
+
+                                    <?php for ($i = 0; $i < count($tab4); $i++) { ?>
+                                        <a class="collapse-item" href="presence.php?prodline=<?php echo $tab4[$i]['prod_line']; ?>">
+                                            <button class="dropdown-item" type="button">
+                                                <?php echo $tab4[$i]['prod_line']; ?>
+                                            </button>
+                                        </a>
+                                    <?php } ?>
                                 </div>
-                                <!-- <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i
-                                class="fas fa-download fa-sm text-white-50"></i> Generate Report</a> -->
                             </div>
-                            <!-- </div> -->
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -161,24 +165,20 @@ session_start();
                                         <tr>
                                             <th>Matricule</th>
                                             <th>Nom & Prénom</th>
-
                                             <th>Chaine de production</th>
                                             <th>Date & Heure</th>
-                                            <!-- <th>Réf machine</th> -->
-                                            <!-- <th>Machine</th> -->
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php
-
                                         $presence = mysqli_query($con, $sql);
                                         $pres = [];
-                                        // if (mysqli_num_rows($presence) > 0) {
                                         while ($rowp_presence = mysqli_fetch_assoc($presence)) {
                                             $pres[] = $rowp_presence;
                                         }
-                                        // }
-                                        for ($i = 0; $i < count($pres); $i++) { ?>
+                                        ?>
+
+                                        <?php for ($i = 0; $i < count($pres); $i++) { ?>
                                             <tr>
                                                 <td>
                                                     <?php echo ($pres[$i]['operator']); ?>
@@ -186,31 +186,21 @@ session_start();
                                                 <td>
                                                     <?php echo ($pres[$i]['employee']); ?>
                                                 </td>
-
                                                 <td>
-                                                    <?php echo ($pres[$i]['prod_line']);
-                                                    ?>
+                                                    <?php echo ($pres[$i]['prod_line']); ?>
                                                 </td>
                                                 <td>
-                                                <?php echo ('Date: ' . $pres[$i]['cur_date'] . '<br> Heure: ' . $pres[$i]['cur_time']);
-                                            } ?>
-
+                                                    <?php echo ('Date: ' . $pres[$i]['cur_date'] . '<br> Heure: ' . $pres[$i]['cur_time']); ?>
                                                 </td>
-                                                <!-- <td>
-                                                <?php // echo ($pres[$i]['designation']);
-                                                ?>
-
-                                            </td> -->
                                             </tr>
+                                        <?php } ?>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
-
                 </div>
                 <!-- /.container-fluid -->
-
             </div>
             <!-- End of Main Content -->
 
@@ -223,10 +213,8 @@ session_start();
                 </div>
             </footer>
             <!-- End of Footer -->
-
         </div>
         <!-- End of Content Wrapper -->
-
     </div>
     <!-- End of Page Wrapper -->
 

@@ -95,7 +95,7 @@ require_once './php/config.php';
                                                     GROUP BY
                                                         operator
                                                 ) AND prod__presence.`prod_line` LIKE '%$prodline%' AND prod__presence.cur_date = CURRENT_DATE;";
-                                        echo ('Chaine: ' . $prodline);
+                                        echo 'Chaine: ' . ($prodline == 'CH_Q' ? 'Chaine Qualité' : $prodline);
                                     } else {
                                         $sql = "SELECT
                                                     `operator`,
@@ -151,7 +151,7 @@ require_once './php/config.php';
                                     <?php for ($i = 0; $i < count($tab4); $i++) { ?>
                                         <a class="collapse-item" href="presence.php?prodline=<?php echo $tab4[$i]['prod_line']; ?>">
                                             <button class="dropdown-item" type="button">
-                                                <?php echo $tab4[$i]['prod_line']; ?>
+                                                <?php echo $tab4[$i]['prod_line'] == 'CH_Q' ? 'Chaine Qualité' : $tab4[$i]['prod_line']; ?>
                                             </button>
                                         </a>
                                     <?php } ?>

@@ -112,7 +112,7 @@ function calculateObjective($con, $prodline): array
     // Return rows if data exists; otherwise, return default
     return !empty($data) ? $data : [];
 }
-$objData = calculateObjective($con, $prodline);
+// $objData = calculateObjective($con, $prodline);
 
 function getEngagedQuantity($con, $prodline): int
 {
@@ -313,14 +313,7 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">objectif</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="Obj1">
-                                                <?php if (empty($objData)): ?>
-                                                    _
-                                                <?php else: ?>
-                                                    <?php foreach ($objData as $row): ?>
-                                                        <?php echo htmlspecialchars($row['model'] ?? 'N/A') . ': ' . htmlspecialchars($row['objective'] ?? 0); ?>
-                                                        <br>
-                                                    <?php endforeach; ?>
-                                                <?php endif; ?>
+                                                _
                                             </div>
                                         </div>
                                     </div>

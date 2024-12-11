@@ -665,7 +665,15 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                                 break;
                         }
                     }
-                    $date = [date('d-m-Y', strtotime("-6 day")), date('d-m-Y', strtotime("-5 day")), date('d-m-Y', strtotime("-4 day")), date('d-m-Y', strtotime("-3 day")), date('d-m-Y', strtotime("-2 day")), date('d-m-Y', strtotime("-1 day")), date('d-m-Y')];
+                    $date = [
+                        date('d-m-Y', strtotime("-6 day")),
+                        date('d-m-Y', strtotime("-5 day")),
+                        date('d-m-Y', strtotime("-4 day")),
+                        date('d-m-Y', strtotime("-3 day")),
+                        date('d-m-Y', strtotime("-2 day")),
+                        date('d-m-Y', strtotime("-1 day")),
+                        date('d-m-Y')
+                    ];
                     $qteeng = [$qeng7, $qeng6, $qeng5, $qeng4, $qeng3, $qeng2, $qeng1];
                     ?>
 
@@ -775,10 +783,8 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                 </div>
             </footer>
             <!-- End of Footer -->
-
         </div>
         <!-- End of Content Wrapper -->
-
     </div>
     <!-- End of Page Wrapper -->
 
@@ -801,7 +807,6 @@ $producedQuantity = getProducedQuantity($con, $prodline);
 
     <!-- Page level custom scripts -->
     <script src="js/script1.js"></script>
-
 </body>
 
 </html>

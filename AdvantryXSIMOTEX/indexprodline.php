@@ -278,14 +278,80 @@ function getProducedQuantitiesByLast7WorkingDays($con, $prodline, $last7WorkingD
         'dates' => $producedQuantitiesDates,
     ];
 }
-$producedQuantitiesByLast7WorkingDays = getProducedQuantitiesByLast7WorkingDays(
+$producedQuantities = getProducedQuantitiesByLast7WorkingDays(
     $con,
     $prodline,
     $last7WorkingDays
 );
 // var_dump($producedQuantitiesByLast7WorkingDays);
 
-function getEngagedQuantitiesByLast7WorkingDays($con, $prodline, $last7WorkingDays) {}
+function getEngagedQuantitiesByLast7WorkingDays($con, $prodline, $last7WorkingDays)
+{
+    // Initialize arrays for quantities and dates
+    $engagedQuantities = [];
+    $engagedQuantitiesDates = [];
+
+    foreach ($last7WorkingDays as $workingDay) {
+        $sql = "SELECT 
+                    SUM(subquery.pack_qty) AS total_pack_qty 
+                FROM 
+                    (
+                        SELECT 
+                            MAX(pack_qty) AS pack_qty 
+                        FROM 
+                            prod__pack_operation 
+                        WHERE 
+                            DATE(cur_date) = ?
+                            AND prod_line = ?
+                            AND pack_num NOT IN (
+                                SELECT 
+                                    pack_num 
+                                FROM 
+                                    prod__pack_operation 
+                                WHERE 
+                                    DATE(cur_date) < ?
+                                    AND prod_line = ?
+                                GROUP BY 
+                                    pack_num
+                            ) 
+                        GROUP BY 
+                            pack_num  -- Group by pack number and select the maximum quantity for each
+                    ) as subquery;";
+
+        $stmt = $con->prepare($sql);
+
+        if (!$stmt) {
+            die("Error preparing statement (getEngagedQuantitiesByLast7WorkingDays): " . $con->error);
+        }
+
+        // Bind parameters
+        $stmt->bind_param("ssss", $workingDay, $prodline, $workingDay, $prodline);
+        $stmt->execute();
+
+        // Fetch the result
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+
+        // Populate arrays
+        $engagedQuantities[] = $row['total_pack_qty'] ?? 0; // Default to 0 if no data
+        $engagedQuantitiesDates[] = date('d-m-Y', strtotime($workingDay)); // Format date
+
+        // Close the statement
+        $stmt->close();
+    }
+
+    // Return the two arrays
+    return [
+        'quantities' => $engagedQuantities,
+        'dates' => $engagedQuantitiesDates,
+    ];
+}
+$engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
+    $con,
+    $prodline,
+    $last7WorkingDays
+);
+// var_dump($engagedQuantitiesByLast7WorkingDays);
 
 ?>
 
@@ -527,14 +593,14 @@ function getEngagedQuantitiesByLast7WorkingDays($con, $prodline, $last7WorkingDa
                         const prodQteChart = new Chart(prodQteChartCtx, {
                             type: 'bar',
                             data: {
-                                labels: <?php echo json_encode($producedQuantitiesByLast7WorkingDays["dates"]); ?>,
+                                labels: <?php echo json_encode($producedQuantities["dates"]); ?>,
                                 datasets: [{
                                     label: "Quantités Fabriquées",
                                     backgroundColor: "rgba(128, 156, 237)",
                                     // borderColor: "rgba(78, 115, 223, 1)",
                                     borderWidth: 0, // Width of the bar borders
                                     // hoverBackgroundColor: "rgba(78, 115, 223, 0.75)",
-                                    data: <?php echo json_encode($producedQuantitiesByLast7WorkingDays["quantities"]); ?>,
+                                    data: <?php echo json_encode($producedQuantities["quantities"]); ?>,
                                 }],
                             },
                             options: {
@@ -594,113 +660,63 @@ function getEngagedQuantitiesByLast7WorkingDays($con, $prodline, $last7WorkingDa
                                 </div>
                             </div>
                         </div>
-
-                        <?php
-                        $inClauseDates = array_map(function ($date) {
-                            return date('Y-m-d', strtotime($date));
-                        }, array_reverse($qfabDates));
-
-                        // Create placeholders for each date
-                        $placeholders = implode(',', array_fill(0, count($inClauseDates), '?'));
-
-                        // Prepare the query with dynamic placeholders
-                        $stmt = $con->prepare(
-                            "SELECT qty_eng, cur_date
-                            FROM prod__indicator
-                            WHERE prod_line = ?
-                            AND cur_date IN ($placeholders)
-                            ORDER BY cur_date DESC LIMIT 6;"
-                        );
-
-                        // Combine prodline and dates for parameter binding
-                        $params = array_merge([$prodline], $inClauseDates);
-
-                        // Dynamically generate types string for bind_param
-                        $types = str_repeat('s', count($params)); // 's' for each string
-
-                        // Bind parameters dynamically
-                        $stmt->bind_param($types, ...$params);
-
-                        // Execute the statement
-                        $stmt->execute();
-                        $rslt2 = $stmt->get_result();
-                        $tab2 = [];
-                        while ($item2 = $rslt2->fetch_assoc()) {
-                            $tab2[] = $item2;
-                        }
-                        $stmt->close();
-
-                        // Print the results
-                        // print_r($tab2);
-
-                        // Initialize arrays
-                        $qeng = [];
-                        $qengDates = [];
-
-                        // Iterate through the SQL result to build the arrays
-                        foreach ($tab2 as $row) {
-                            $qeng[] = $row['qty_eng']; // Collect quantities
-                            $qengDates[] = date('d-m-Y', strtotime($row['cur_date'])); // Format date for display
-                        }
-                        ?>
-
-                        <script>
-                            const engQteChartCtx = document.getElementById("engQteChart");
-                            const engQteChart = new Chart(engQteChartCtx, {
-                                type: 'bar',
-                                data: {
-                                    labels: <?php echo json_encode(array_reverse($qengDates)); ?>,
-                                    datasets: [{
-                                        label: "Quantités Engagées",
-                                        backgroundColor: "rgba(128, 156, 237)",
-                                        // borderColor: "rgba(78, 115, 223, 1)",
-                                        borderWidth: 0, // Width of the bar borders
-                                        // hoverBackgroundColor: "rgba(78, 115, 223, 0.75)",
-                                        data: <?php echo json_encode(array_reverse($qeng)); ?>,
+                    </div>
+                    <script>
+                        const engQteChartCtx = document.getElementById("engQteChart");
+                        const engQteChart = new Chart(engQteChartCtx, {
+                            type: 'bar',
+                            data: {
+                                labels: <?php echo json_encode($engagedQuantities["dates"]); ?>,
+                                datasets: [{
+                                    label: "Quantités Engagées",
+                                    backgroundColor: "rgba(128, 156, 237)",
+                                    // borderColor: "rgba(78, 115, 223, 1)",
+                                    borderWidth: 0, // Width of the bar borders
+                                    // hoverBackgroundColor: "rgba(78, 115, 223, 0.75)",
+                                    data: <?php echo json_encode($engagedQuantities["quantities"]); ?>,
+                                }],
+                            },
+                            options: {
+                                maintainAspectRatio: false,
+                                layout: {
+                                    padding: {
+                                        // left: 0,
+                                        right: 10,
+                                        // top: 0,
+                                        // bottom: 0
+                                    }
+                                },
+                                scales: {
+                                    xAxes: [{
+                                        gridLines: {
+                                            display: true, // Show grid lines on X-axis
+                                            drawBorder: false, // Don't draw the border at the bottom
+                                            color: "rgba(200, 200, 200, 0.2)", // Light grid line color
+                                        },
+                                        ticks: {
+                                            maxTicksLimit: 7, // Maximum visible ticks
+                                        },
+                                        offset: true // Ensure grid lines are drawn at the end of the last label
+                                    }],
+                                    yAxes: [{
+                                        ticks: {
+                                            beginAtZero: true, // Start Y-axis at 0
+                                        },
+                                        gridLines: {
+                                            color: "rgba(200, 200, 200, 0.2)", // Light grid line color
+                                        }
                                     }],
                                 },
-                                options: {
-                                    maintainAspectRatio: false,
-                                    layout: {
-                                        padding: {
-                                            // left: 0,
-                                            right: 10,
-                                            // top: 0,
-                                            // bottom: 0
-                                        }
-                                    },
-                                    scales: {
-                                        xAxes: [{
-                                            gridLines: {
-                                                display: true, // Show grid lines on X-axis
-                                                drawBorder: false, // Don't draw the border at the bottom
-                                                color: "rgba(200, 200, 200, 0.2)", // Light grid line color
-                                            },
-                                            ticks: {
-                                                maxTicksLimit: 7, // Maximum visible ticks
-                                            },
-                                            offset: true // Ensure grid lines are drawn at the end of the last label
-                                        }],
-                                        yAxes: [{
-                                            ticks: {
-                                                beginAtZero: true, // Start Y-axis at 0
-                                            },
-                                            gridLines: {
-                                                color: "rgba(200, 200, 200, 0.2)", // Light grid line color
-                                            }
-                                        }],
-                                    },
-                                    legend: {
-                                        display: true, // Show legend
-                                        position: 'top', // Legend position
-                                    },
-                                    tooltips: {
-                                        enabled: true, // Enable tooltips
-                                    }
+                                legend: {
+                                    display: true, // Show legend
+                                    position: 'top', // Legend position
+                                },
+                                tooltips: {
+                                    enabled: true, // Enable tooltips
                                 }
-                            });
-                        </script>
-                    </div>
+                            }
+                        });
+                    </script>
                 </div>
                 <!-- /.container-fluid -->
             </div>

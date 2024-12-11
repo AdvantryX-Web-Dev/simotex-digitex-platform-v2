@@ -450,7 +450,7 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                                 <!-- Card Body -->
                                 <div class="card-body">
                                     <div class="chart-area">
-                                        <canvas id="myAreaChartQte"></canvas>
+                                        <canvas id="prodQteChart"></canvas>
                                     </div>
                                 </div>
                             </div>
@@ -519,8 +519,8 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                     ?>
 
                     <script>
-                        var ctx = document.getElementById("myAreaChartQte");
-                        var myLineChart = new Chart(ctx, {
+                        const prodQteChartCtx = document.getElementById("prodQteChart");
+                        const prodQteChart = new Chart(prodQteChartCtx, {
                             type: 'bar',
                             data: {
                                 labels: <?php echo json_encode($date); ?>,
@@ -622,7 +622,7 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                                 <!-- Card Body -->
                                 <div class="card-body">
                                     <div class="chart-area">
-                                        <canvas id="myAreaChart"></canvas>
+                                        <canvas id="engQteChart"></canvas>
                                     </div>
                                 </div>
                             </div>
@@ -685,8 +685,8 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                     ?>
 
                     <script>
-                        var ctx = document.getElementById("myAreaChart");
-                        var myLineChart = new Chart(ctx, {
+                        const engQteChartCtx = document.getElementById("engQteChart");
+                        const engQteChart = new Chart(engQteChartCtx, {
                             type: 'bar',
                             data: {
                                 labels: <?php echo json_encode($date); ?>,
@@ -774,10 +774,8 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                             }
                         });
                     </script>
-
                 </div>
                 <!-- /.container-fluid -->
-
             </div>
             <!-- End of Main Content -->
 
@@ -792,7 +790,6 @@ $producedQuantity = getProducedQuantity($con, $prodline);
             <!-- End of Footer -->
         </div>
         <!-- End of Content Wrapper -->
-
     </div>
     <!-- End of Page Wrapper -->
 
@@ -812,9 +809,6 @@ $producedQuantity = getProducedQuantity($con, $prodline);
 
     <!-- Page level plugins -->
     <script src="js/Chart.min.js"></script>
-
-    <!-- Page level custom scripts -->
-    <script src="js/script1.js"></script>
 </body>
 
 </html>

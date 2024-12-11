@@ -118,34 +118,16 @@ function getEngagedQuantity($con, $prodline): int
 {
     // SQL query to calculate the total engaged quantity for the current date and specified production line
     $sql = "SELECT 
-                SUM(subquery.pack_qty) AS total_pack_qty 
+                SUM(`pack_qty`) AS total_pack_qty 
             FROM 
-                (
-                    SELECT 
-                        MAX(pack_qty) AS pack_qty 
-                    FROM 
-                        prod__pack_operation 
-                    WHERE 
-                        cur_date = CURRENT_DATE  -- Filter records for the current date
-                        AND prod_line = ?        -- Filter by the specified production line
-                        AND pack_num NOT IN (
-                            SELECT 
-                                pack_num 
-                            FROM 
-                                prod__pack_operation 
-                            WHERE 
-                                cur_date < CURRENT_DATE  -- Exclude pack numbers from previous dates
-                                AND prod_line = ?        -- Ensure they belong to the same production line
-                            GROUP BY 
-                                pack_num
-                        ) 
-                    GROUP BY 
-                        pack_num  -- Group by pack number and select the maximum quantity for each
-                ) as subquery;";
+                `prod__pack_operation` 
+            WHERE 
+                `prod__pack_operation`.`cur_date` = CURRENT_DATE 
+                AND `prod__pack_operation`.`opn_code` = '9090' 
+                AND `prod__pack_operation`.`prod_line` = ?;";
 
     // Prepare the SQL statement
     $stmt = $con->prepare($sql);
-
     // Check if statement preparation is successful
     if (!$stmt) {
         // Log an error message if preparation failed
@@ -154,14 +136,13 @@ function getEngagedQuantity($con, $prodline): int
     }
 
     // Bind the production line parameter to the SQL query
-    $stmt->bind_param('ss', $prodline, $prodline);
+    $stmt->bind_param('s', $prodline);
 
     // Execute the prepared statement
     $stmt->execute();
 
     // Get the result set from the executed query
     $result = $stmt->get_result();
-
     // Check if any rows are returned
     if ($result->num_rows === 0) {
         return 0; // Return 0 or an appropriate value if no rows are found
@@ -170,7 +151,7 @@ function getEngagedQuantity($con, $prodline): int
     // Fetch the associative array from the result set
     $row = $result->fetch_assoc();
 
-    // Return the total engaged quantity
+    // Return the total produced quantity
     return $row['total_pack_qty'] ?? 0;
 }
 $engagedQuantity = getEngagedQuantity($con, $prodline);
@@ -185,7 +166,7 @@ function getProducedQuantity($con, $prodline): int
                 `prod__pack_operation` 
             WHERE 
                 `prod__pack_operation`.`cur_date` = CURRENT_DATE 
-                AND `prod__pack_operation`.`opn_code` = '5072' 
+                AND `prod__pack_operation`.`opn_code` = '5069' 
                 AND `prod__pack_operation`.`prod_line` = ?;";
 
     // Prepare the SQL statement
@@ -431,7 +412,7 @@ $producedQuantity = getProducedQuantity($con, $prodline);
 
                     </div>
 
-                    <!-- Quantité Fabriquée Chart -->
+                    <!-- CETTE PARTIE PHP POUR QUANTITÉ FABRIQUÉE CHART -->
                     <div class="row">
                         <div class="col">
                             <div class="card shadow mb-4">
@@ -443,28 +424,24 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                                 <!-- Card Body -->
                                 <div class="card-body">
                                     <div class="chart-area">
-                                        <canvas id="myAreaChartQte"></canvas>
+                                        <canvas id="prodQteChart"></canvas>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- CETTE PARTIE PHP POUR LE CHART -->
                     <?php
                     $query2 = "SELECT SUM(`pack_qty`) AS quantity, cur_date
                                 FROM `prod__pack_operation`
-                                WHERE `prod__pack_operation`.`opn_code` = '5072'
+                                WHERE `prod__pack_operation`.`opn_code` = '5069'
                                     AND `prod__pack_operation`.`prod_line` = '$prodline'
                                 GROUP BY `cur_date`
                                 ORDER by cur_date DESC LIMIT 7;";
                     $rslt2 = $con->query($query2);
-
                     $tab2 = [];
                     while ($item2 = $rslt2->fetch_assoc()) {
                         $tab2[] = $item2;
                     }
-
                     $qfab1 = 0;
                     $qfab2 = 0;
                     $qfab3 = 0;
@@ -472,7 +449,6 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                     $qfab5 = 0;
                     $qfab6 = 0;
                     $qfab7 = 0;  // Ajouté pour correspondre au jour J-6
-
                     for ($i1 = 0; $i1 < count($tab2); $i1++) {
                         switch ($tab2[$i1]['cur_date']) {
                             case date('Y-m-d'):
@@ -498,7 +474,6 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                                 break;
                         }
                     }
-
                     $date = [
                         date('d-m-Y', strtotime("-6 days")),
                         date('d-m-Y', strtotime("-5 days")),
@@ -512,8 +487,8 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                     ?>
 
                     <script>
-                        var ctx = document.getElementById("myAreaChartQte");
-                        var myLineChart = new Chart(ctx, {
+                        const prodQteChartCtx = document.getElementById("prodQteChart");
+                        const prodQteChart = new Chart(prodQteChartCtx, {
                             type: 'bar',
                             data: {
                                 labels: <?php echo json_encode($date); ?>,
@@ -602,9 +577,8 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                         });
                     </script>
 
-                    <!-- Quantité Engagée Chart -->
+                    <!-- CETTE PARTIE PHP POUR QUANTITÉ ENGAGÉE CHART -->
                     <div class="row">
-                        <!-- Quantité Chart -->
                         <div class="col">
                             <div class="card shadow mb-4">
                                 <!-- Card Header - Dropdown -->
@@ -615,23 +589,22 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                                 <!-- Card Body -->
                                 <div class="card-body">
                                     <div class="chart-area">
-                                        <canvas id="myAreaChart"></canvas>
+                                        <canvas id="engQteChart"></canvas>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- CETTE PARTIE PHP POUR LE CHART -->
                     <?php
-                    $query2 = "SELECT `qty_eng`, cur_date FROM `prod__indicator` where cur_date >= NOW() - INTERVAL 7 DAY AND prod_line= '$prodline';";
+                    $query2 = "SELECT `qty_eng`, cur_date
+                                FROM `prod__indicator`
+                                WHERE cur_date >= NOW() - INTERVAL 7 DAY
+                                AND prod_line= '$prodline';";
                     $rslt2 = $con->query($query2);
-
                     $tab2 = [];
                     while ($item2 = $rslt2->fetch_assoc()) {
                         $tab2[] = $item2;
                     }
-
                     $qeng1 = 0;
                     $qeng2 = 0;
                     $qeng3 = 0;
@@ -676,10 +649,9 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                     ];
                     $qteeng = [$qeng7, $qeng6, $qeng5, $qeng4, $qeng3, $qeng2, $qeng1];
                     ?>
-
                     <script>
-                        var ctx = document.getElementById("myAreaChart");
-                        var myLineChart = new Chart(ctx, {
+                        const engQteChartCtx = document.getElementById("engQteChart");
+                        const engQteChart = new Chart(engQteChartCtx, {
                             type: 'bar',
                             data: {
                                 labels: <?php echo json_encode($date); ?>,
@@ -767,10 +739,8 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                             }
                         });
                     </script>
-
                 </div>
                 <!-- /.container-fluid -->
-
             </div>
             <!-- End of Main Content -->
 
@@ -804,9 +774,6 @@ $producedQuantity = getProducedQuantity($con, $prodline);
 
     <!-- Page level plugins -->
     <script src="js/Chart.min.js"></script>
-
-    <!-- Page level custom scripts -->
-    <script src="js/script1.js"></script>
 </body>
 
 </html>

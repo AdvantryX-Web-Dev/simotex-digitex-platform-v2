@@ -588,62 +588,6 @@ $engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
                             </div>
                         </div>
                     </div>
-                    <script>
-                        const prodQteChartCtx = document.getElementById("prodQteChart").getContext('2d');
-                        const prodQteChart = new Chart(prodQteChartCtx, {
-                            type: 'bar',
-                            data: {
-                                labels: <?php echo json_encode($producedQuantities["dates"]); ?>,
-                                datasets: [{
-                                    label: "Quantités Fabriquées",
-                                    backgroundColor: "rgba(128, 156, 237)",
-                                    // borderColor: "rgba(78, 115, 223, 1)",
-                                    borderWidth: 0, // Width of the bar borders
-                                    // hoverBackgroundColor: "rgba(78, 115, 223, 0.75)",
-                                    data: <?php echo json_encode($producedQuantities["quantities"]); ?>,
-                                }],
-                            },
-                            options: {
-                                maintainAspectRatio: false,
-                                layout: {
-                                    padding: {
-                                        // left: 0,
-                                        right: 10,
-                                        // top: 0,
-                                        // bottom: 0
-                                    }
-                                },
-                                scales: {
-                                    xAxes: [{
-                                        gridLines: {
-                                            display: true, // Show grid lines on X-axis
-                                            drawBorder: false, // Don't draw the border at the bottom
-                                            color: "rgba(200, 200, 200, 0.2)", // Light grid line color
-                                        },
-                                        ticks: {
-                                            maxTicksLimit: 7, // Maximum visible ticks
-                                        },
-                                        offset: true // Ensure grid lines are drawn at the end of the last label
-                                    }],
-                                    yAxes: [{
-                                        ticks: {
-                                            beginAtZero: true, // Start Y-axis at 0
-                                        },
-                                        gridLines: {
-                                            color: "rgba(200, 200, 200, 0.2)", // Light grid line color
-                                        }
-                                    }],
-                                },
-                                legend: {
-                                    display: true, // Show legend
-                                    position: 'top', // Legend position
-                                },
-                                tooltips: {
-                                    enabled: true, // Enable tooltips
-                                }
-                            }
-                        });
-                    </script>
 
                     <!-- CETTE PARTIE PHP POUR QUANTITÉS ENGAGÉES CHART -->
                     <div class="row">
@@ -661,62 +605,6 @@ $engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
                             </div>
                         </div>
                     </div>
-                    <script>
-                        const engQteChartCtx = document.getElementById("engQteChart");
-                        const engQteChart = new Chart(engQteChartCtx, {
-                            type: 'bar',
-                            data: {
-                                labels: <?php echo json_encode($engagedQuantities["dates"]); ?>,
-                                datasets: [{
-                                    label: "Quantités Engagées",
-                                    backgroundColor: "rgba(128, 156, 237)",
-                                    // borderColor: "rgba(78, 115, 223, 1)",
-                                    borderWidth: 0, // Width of the bar borders
-                                    // hoverBackgroundColor: "rgba(78, 115, 223, 0.75)",
-                                    data: <?php echo json_encode($engagedQuantities["quantities"]); ?>,
-                                }],
-                            },
-                            options: {
-                                maintainAspectRatio: false,
-                                layout: {
-                                    padding: {
-                                        // left: 0,
-                                        right: 10,
-                                        // top: 0,
-                                        // bottom: 0
-                                    }
-                                },
-                                scales: {
-                                    xAxes: [{
-                                        gridLines: {
-                                            display: true, // Show grid lines on X-axis
-                                            drawBorder: false, // Don't draw the border at the bottom
-                                            color: "rgba(200, 200, 200, 0.2)", // Light grid line color
-                                        },
-                                        ticks: {
-                                            maxTicksLimit: 7, // Maximum visible ticks
-                                        },
-                                        offset: true // Ensure grid lines are drawn at the end of the last label
-                                    }],
-                                    yAxes: [{
-                                        ticks: {
-                                            beginAtZero: true, // Start Y-axis at 0
-                                        },
-                                        gridLines: {
-                                            color: "rgba(200, 200, 200, 0.2)", // Light grid line color
-                                        }
-                                    }],
-                                },
-                                legend: {
-                                    display: true, // Show legend
-                                    position: 'top', // Legend position
-                                },
-                                tooltips: {
-                                    enabled: true, // Enable tooltips
-                                }
-                            }
-                        });
-                    </script>
                 </div>
                 <!-- /.container-fluid -->
             </div>
@@ -746,12 +634,122 @@ $engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
     <script src="js/bootstrap.bundle.min.js"></script>
     <!-- Core plugin JavaScript-->
     <script src="js/jquery.easing.min.js"></script>
-
     <!-- Custom scripts for all pages-->
     <script src="js/sb-admin-2.min.js"></script>
-
     <!-- Page level plugins -->
     <script src="js/Chart.min.js"></script>
+
+    <script>
+        // CETTE PARTIE PHP POUR QUANTITÉS FABRIQUÉES CHART
+        const prodQteChartCtx = document.getElementById("prodQteChart").getContext('2d');
+        const prodQteChart = new Chart(prodQteChartCtx, {
+            type: 'bar',
+            data: {
+                labels: <?php echo json_encode($producedQuantities["dates"]); ?>,
+                datasets: [{
+                    label: "Quantités Fabriquées",
+                    backgroundColor: "rgba(128, 156, 237, 1)", // Soft Blue
+                    hoverBackgroundColor: "rgba(78, 115, 223, 1)", // Darker Blue for hover
+                    borderColor: "rgba(78, 115, 223, 1)",
+                    data: <?php echo json_encode($producedQuantities["quantities"]); ?>,
+                }],
+            },
+            options: {
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        // left: 0,
+                        right: 10,
+                        // top: 0,
+                        // bottom: 0
+                    }
+                },
+                scales: {
+                    xAxes: [{
+                        gridLines: {
+                            display: true, // Show grid lines on X-axis
+                            drawBorder: false, // Don't draw the border at the bottom
+                            color: "rgba(200, 200, 200, 0.2)", // Light grid line color
+                        },
+                        ticks: {
+                            maxTicksLimit: 7, // Maximum visible ticks
+                        },
+                        offset: true // Ensure grid lines are drawn at the end of the last label
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true, // Start Y-axis at 0
+                        },
+                        gridLines: {
+                            color: "rgba(200, 200, 200, 0.2)", // Light grid line color
+                        }
+                    }],
+                },
+                legend: {
+                    display: true, // Show legend
+                    position: 'top', // Legend position
+                },
+                tooltips: {
+                    enabled: true, // Enable tooltips
+                }
+            }
+        });
+
+        // CETTE PARTIE PHP POUR QUANTITÉS ENGAGÉES CHART
+        const engQteChartCtx = document.getElementById("engQteChart");
+        const engQteChart = new Chart(engQteChartCtx, {
+            type: 'bar',
+            data: {
+                labels: <?php echo json_encode($engagedQuantities["dates"]); ?>,
+                datasets: [{
+                    label: "Quantités Engagées",
+                    backgroundColor: "rgba(75, 192, 192, 1)", // Soft Green (or rgba(255, 159, 64, 1) for Orange)
+                    hoverBackgroundColor: "rgba(53, 183, 183, 1)", // Darker Green for hover (or rgba(255, 135, 31, 1) for Orange)
+                    borderColor: "rgba(75, 192, 192, 1)", // Same as background color
+                    data: <?php echo json_encode($engagedQuantities["quantities"]); ?>,
+                }],
+            },
+            options: {
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        // left: 0,
+                        right: 10,
+                        // top: 0,
+                        // bottom: 0
+                    }
+                },
+                scales: {
+                    xAxes: [{
+                        gridLines: {
+                            display: true, // Show grid lines on X-axis
+                            drawBorder: false, // Don't draw the border at the bottom
+                            color: "rgba(200, 200, 200, 0.2)", // Light grid line color
+                        },
+                        ticks: {
+                            maxTicksLimit: 7, // Maximum visible ticks
+                        },
+                        offset: true // Ensure grid lines are drawn at the end of the last label
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true, // Start Y-axis at 0
+                        },
+                        gridLines: {
+                            color: "rgba(200, 200, 200, 0.2)", // Light grid line color
+                        }
+                    }],
+                },
+                legend: {
+                    display: true, // Show legend
+                    position: 'top', // Legend position
+                },
+                tooltips: {
+                    enabled: true, // Enable tooltips
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>

@@ -1014,7 +1014,7 @@ WHERE
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
                     <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; Advantry X 2023</span>
+                        <span>Copyright &copy; Advantry X <?php echo date("Y"); ?></span>
                     </div>
                 </div>
             </footer>

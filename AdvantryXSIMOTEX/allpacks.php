@@ -145,7 +145,7 @@ session_start();
                                                 </td> -->
                                                 <!-- &emsp;<a href='deleteconf.php?pack=<?php // echo ($pack[$i]['pack_num']) 
                                                                                         ?>&id=<?php // echo ($pack[$i]['id']) 
-                                                            ?>'><img src="./img/delete.png" alt="icone" width="15mm" height="15mm"></a></td> -->
+                                                                                                ?>'><img src="./img/delete.png" alt="icone" width="15mm" height="15mm"></a></td> -->
                                                 <td><a href='packop.php?pack_num=<?php echo $pack[$i]['pack_num']; ?>'>
                                                         <?php echo $pack[$i]['number']; ?>
                                                     </a></td>
@@ -194,7 +194,7 @@ session_start();
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
                     <div class="copyright text-center my-auto">
-                        <span> Copyright &copy; Advantry X 2024</span>
+                        <span> Copyright &copy; Advantry X <?php echo date("Y"); ?></span>
                     </div>
                 </div>
             </footer>

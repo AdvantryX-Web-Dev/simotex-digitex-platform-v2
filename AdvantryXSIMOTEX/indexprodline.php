@@ -283,7 +283,7 @@ $producedQuantities = getProducedQuantitiesByLast7WorkingDays(
     $prodline,
     $last7WorkingDays
 );
-// var_dump($producedQuantitiesByLast7WorkingDays);
+// var_dump($producedQuantities);
 
 function getEngagedQuantitiesByLast7WorkingDays($con, $prodline, $last7WorkingDays)
 {
@@ -351,7 +351,7 @@ $engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
     $prodline,
     $last7WorkingDays
 );
-// var_dump($engagedQuantitiesByLast7WorkingDays);
+// var_dump($engagedQuantities);
 
 ?>
 

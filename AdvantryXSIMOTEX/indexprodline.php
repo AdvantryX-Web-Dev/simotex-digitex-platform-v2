@@ -785,6 +785,7 @@ $producedQuantity = getProducedQuantity($con, $prodline);
             <!-- End of Footer -->
         </div>
         <!-- End of Content Wrapper -->
+
     </div>
     <!-- End of Page Wrapper -->
 

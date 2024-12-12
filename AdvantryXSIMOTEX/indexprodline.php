@@ -396,7 +396,7 @@ $engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h2 class="h1 mb-0 mt-4 text-gray-800">Dashboard</h2>
-                        <h3 class="h3 mb-0 mt-4 text-primary">Chaine: <?php echo ($prodline == "CH_Q" ? "Chaine Qualité" : $prodline); ?></h3>
+                        <h3 class="h3 mb-0 mt-4 text-primary">Chaine: <?php echo $prodline; ?></h3>
 
                         <!-- START OF PRODLINES DROPDOWN LIST -->
                         <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm dropdown-toggle mt-4"
@@ -441,11 +441,11 @@ $engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
 
                         <!-- Objectif -->
                         <div class="col-xl-4 col-md-6 mb-4">
-                            <div class="card border-left-info shadow h-100 py-2">
+                            <div class="card border-left-success shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">objectif</div>
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">objectif</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="Obj1">
                                                 <?php if (empty($objData)): ?>
                                                     _
@@ -464,11 +464,11 @@ $engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
 
                         <!-- Quantité Engagée -->
                         <div class="col-xl-4 col-md-6 mb-4">
-                            <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card border-left-info shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Quantité Engagée</div>
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Quantité Engagée</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="QENG1">
                                                 <?php echo $engagedQuantity; ?>
                                             </div>
@@ -480,11 +480,11 @@ $engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
 
                         <!-- Quantité Fabriquée -->
                         <div class="col-xl-4 col-md-6 mb-4">
-                            <div class="card border-left-warning shadow h-100 py-2">
+                            <div class="card border-left-primary shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                                 Quantité Fabriquée
                                             </div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="QFAB1">

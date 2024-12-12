@@ -3,6 +3,38 @@ session_start();
 date_default_timezone_set('Africa/Tunis');
 require_once './php/config.php';
 require_once './php/configobj.php';
+
+// $query2 = "SELECT
+//             -- subquery.`pack_num`,
+//             subquery.`quantity`,
+//             subquery.`defective_pcs`
+//             -- subquery.`cur_dt`
+//         FROM (
+//             SELECT
+//                 -- MIN(`prod__eol_control`.`pack_num`) as `pack_num`,
+//                 MIN(`prod__eol_control`.`quantity`) as `quantity`,
+//                 MIN(`prod__eol_control`.`defective_pcs`) as `defective_pcs`
+//                 -- MIN(`prod__eol_control`.`updated_at`) as `cur_dt`
+//             FROM
+//                 `prod__eol_control`
+//             WHERE
+//                 `group` = '$prodline'
+//                 AND DATE(`prod__eol_control`.`updated_at`) = CURRENT_DATE
+//                 AND `prod__eol_control`.`ctrl_state` = 1
+//             GROUP BY
+//                 `prod__eol_control`.`pack_num`
+//         ) as subquery;";
+// $rslt2 = $con->query($query2);
+
+// $tab2 = [];
+// while ($item2 = $rslt2->fetch_assoc()) {
+//     $tab2[] = $item2;
+// }
+
+// $qfab = array_sum(array_column($tab2, 'quantity'));
+// $qdf = array_sum(array_column($tab2, 'defective_pcs'));
+// $cq = $qfab > 0 ? ($qdf / $qfab) * 100 : 0;
+
 ?>
 <!DOCTYPE html>
 <html lang="en">

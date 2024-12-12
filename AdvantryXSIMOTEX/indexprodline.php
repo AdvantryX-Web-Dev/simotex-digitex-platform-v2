@@ -75,19 +75,37 @@ $presentOperators = getPresentOperators($con, $prodline);
 function calculateObjective($con, $prodline): array
 {
     // Query to get the latest rendement_objectif and temps_de_gamme
+    // $query = "SELECT 
+    //             prod__prod_line.objective, 
+    //             -- init__prod_line.prod_line, 
+    //             init__model.model 
+    //         FROM 
+    //             prod__prod_line 
+    //         INNER JOIN init__prod_line ON prod__prod_line.prod_line_id = init__prod_line.id 
+    //         INNER JOIN init__model ON init__model.id = prod__prod_line.model_id 
+    //         WHERE 
+    //             DATE(prod__prod_line.cur_date) = CURDATE()
+    //             AND init__prod_line.prod_line = ? 
+    //         ORDER BY 
+    //             prod__prod_line.id DESC;";
     $query = "SELECT 
-                `prod__prod_line`.`objective`, 
-                -- `init__prod_line`.`prod_line`, 
-                `init__model`.`model` 
+                p.objective AS objective, 
+                m.model AS model
             FROM 
-                `prod__prod_line` 
-            INNER JOIN `init__prod_line` ON `prod__prod_line`.`prod_line_id` = `init__prod_line`.`id` 
-            INNER JOIN `init__model` ON `init__model`.`id` = `prod__prod_line`.`model_id` 
+                prod__prod_line p
+            INNER JOIN init__prod_line pl ON p.prod_line_id = pl.id
+            INNER JOIN init__model m ON p.model_id = m.id
             WHERE 
-                `prod__prod_line`.`cur_date` = CURDATE()
-                AND `init__prod_line`.`prod_line` = ? 
-            ORDER BY 
-                `prod__prod_line`.`id` DESC;";
+                p.cur_date = CURDATE()
+                AND pl.prod_line = ?
+                AND p.id = (
+                    SELECT MAX(p2.id) 
+                    FROM prod__prod_line p2
+                    WHERE p2.cur_date = p.cur_date 
+                    AND p2.prod_line_id = p.prod_line_id
+                    AND p2.model_id = p.model_id
+                )
+            ORDER BY p.id DESC;";
 
     // Prepare the query
     $stmt = $con->prepare($query);

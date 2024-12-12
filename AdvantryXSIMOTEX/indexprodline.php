@@ -291,7 +291,7 @@ function calculateFirstEntryDefectiveRate($con, $prodline)
 }
 $defectiveRate = calculateFirstEntryDefectiveRate($con, $prodline);
 // Output the result
-var_dump($defectiveRate);
+// var_dump($defectiveRate);
 
 function getLast7WorkingDays($con)
 {

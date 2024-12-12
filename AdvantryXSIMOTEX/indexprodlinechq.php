@@ -117,21 +117,18 @@ function calculateObjective($con, $prodline): array
 function getEngagedQuantity($con, $prodline): int
 {
     // SQL query to calculate the total engaged quantity for the current date and specified production line
-    $sql = "SELECT 
-                SUM(`pack_qty`) AS total_pack_qty 
-            FROM 
-                `prod__pack_operation` 
-            WHERE 
-                `prod__pack_operation`.`cur_date` = CURRENT_DATE 
-                AND `prod__pack_operation`.`opn_code` = '9090' 
-                AND `prod__pack_operation`.`prod_line` = ?;";
+    $sql = "SELECT SUM(pack_qty) AS total_pack_qty 
+            FROM prod__pack_operation 
+            WHERE cur_date = CURRENT_DATE 
+                AND opn_code = '9090' 
+                AND prod_line = ?;";
 
     // Prepare the SQL statement
     $stmt = $con->prepare($sql);
     // Check if statement preparation is successful
     if (!$stmt) {
         // Log an error message if preparation failed
-        error_log("Database statement preparation failed: " . $con->error);
+        error_log("Database statement preparation failed (getEngagedQuantity): " . $con->error);
         return 0; // Return 0 or an appropriate value on error
     }
 
@@ -160,21 +157,18 @@ $engagedQuantity = getEngagedQuantity($con, $prodline);
 function getProducedQuantity($con, $prodline): int
 {
     // SQL query to calculate the total produced quantity for the given production line on the current date
-    $sql = "SELECT 
-                SUM(`pack_qty`) AS total_pack_qty 
-            FROM 
-                `prod__pack_operation` 
-            WHERE 
-                `prod__pack_operation`.`cur_date` = CURRENT_DATE 
-                AND `prod__pack_operation`.`opn_code` = '5069' 
-                AND `prod__pack_operation`.`prod_line` = ?;";
+    $sql = "SELECT SUM(pack_qty) AS total_pack_qty 
+            FROM prod__pack_operation 
+            WHERE cur_date = CURRENT_DATE 
+                AND opn_code = '5069' 
+                AND prod_line = ?;";
 
     // Prepare the SQL statement
     $stmt = $con->prepare($sql);
     // Check if statement preparation is successful
     if (!$stmt) {
         // Log an error message if preparation failed
-        error_log("Database statement preparation failed: " . $con->error);
+        error_log("Database statement preparation failed (getProducedQuantity): " . $con->error);
         return 0; // Return 0 or an appropriate value on error
     }
 
@@ -199,6 +193,125 @@ function getProducedQuantity($con, $prodline): int
 }
 $producedQuantity = getProducedQuantity($con, $prodline);
 // echo $producedQuantity;
+
+function getLast7WorkingDays($con)
+{
+    $sql = "SELECT DISTINCT DATE(cur_date) AS cur_date
+            FROM prod__pack_operation
+            ORDER BY DATE(cur_date) DESC LIMIT 7;";
+
+    $stmt = $con->prepare($sql);
+    if (!$stmt) {
+        die("Error preparing statement (getLast7WorkingDays): " . $con->error);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $tab = [];
+    while ($row = $result->fetch_assoc()) {
+        $tab[] = $row['cur_date'];
+    }
+    return array_reverse($tab); // Return the array in reverse order
+}
+$last7WorkingDays = getLast7WorkingDays($con);
+// var_dump($last7WorkingDays);
+
+function getProducedQuantitiesByLast7WorkingDays($con, $prodline, $last7WorkingDays)
+{
+    // Initialize arrays for quantities and dates
+    $producedQuantities = [];
+    $producedQuantitiesDates = [];
+
+    foreach ($last7WorkingDays as $workingDay) {
+        // Prepare the SQL statement
+        $stmt = $con->prepare(
+            "SELECT SUM(pack_qty) AS total_pack_qty
+            FROM prod__pack_operation
+            WHERE opn_code = '5069'
+            AND prod_line = ?
+            AND DATE(cur_date) = ?;"
+        );
+
+        if (!$stmt) {
+            die("Error preparing statement (getProducedQuantitiesByLast7WorkingDays): " . $con->error);
+        }
+
+        // Bind parameters
+        $stmt->bind_param("ss", $prodline, $workingDay);
+        $stmt->execute();
+
+        // Fetch the result
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+
+        // Populate arrays
+        $producedQuantities[] = $row['total_pack_qty'] ?? 0; // Default to 0 if no data
+        $producedQuantitiesDates[] = date('d-m-Y', strtotime($workingDay)); // Format date
+
+        // Close the statement
+        $stmt->close();
+    }
+
+    // Return the two arrays
+    return [
+        'quantities' => $producedQuantities,
+        'dates' => $producedQuantitiesDates,
+    ];
+}
+$producedQuantities = getProducedQuantitiesByLast7WorkingDays(
+    $con,
+    $prodline,
+    $last7WorkingDays
+);
+// var_dump($producedQuantities);
+
+function getEngagedQuantitiesByLast7WorkingDays($con, $prodline, $last7WorkingDays)
+{
+    // Initialize arrays for quantities and dates
+    $engagedQuantities = [];
+    $engagedQuantitiesDates = [];
+
+    foreach ($last7WorkingDays as $workingDay) {
+        // Prepare the SQL statement
+        $stmt = $con->prepare(
+            "SELECT SUM(pack_qty) AS total_pack_qty
+            FROM prod__pack_operation
+            WHERE opn_code = '9090'
+            AND prod_line = ?
+            AND DATE(cur_date) = ?;"
+        );
+
+        if (!$stmt) {
+            die("Error preparing statement (getEngagedQuantitiesByLast7WorkingDays): " . $con->error);
+        }
+
+        // Bind parameters
+        $stmt->bind_param("ss", $prodline, $workingDay);
+        $stmt->execute();
+
+        // Fetch the result
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+
+        // Populate arrays
+        $engagedQuantities[] = $row['total_pack_qty'] ?? 0; // Default to 0 if no data
+        $engagedQuantitiesDates[] = date('d-m-Y', strtotime($workingDay)); // Format date
+
+        // Close the statement
+        $stmt->close();
+    }
+
+    // Return the two arrays
+    return [
+        'quantities' => $engagedQuantities,
+        'dates' => $engagedQuantitiesDates,
+    ];
+}
+$engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
+    $con,
+    $prodline,
+    $last7WorkingDays
+);
+// var_dump($engagedQuantities);
 
 ?>
 
@@ -288,11 +401,11 @@ $producedQuantity = getProducedQuantity($con, $prodline);
 
                         <!-- Objectif -->
                         <div class="col-xl-4 col-md-6 mb-4">
-                            <div class="card border-left-info shadow h-100 py-2">
+                            <div class="card border-left-success shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">objectif</div>
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">objectif</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="Obj1">
                                                 _
                                             </div>
@@ -304,11 +417,11 @@ $producedQuantity = getProducedQuantity($con, $prodline);
 
                         <!-- Quantité Engagée -->
                         <div class="col-xl-4 col-md-6 mb-4">
-                            <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card border-left-info shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Quantité Engagée</div>
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Quantité Engagée</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="QENG1">
                                                 <?php echo $engagedQuantity; ?>
                                             </div>
@@ -320,11 +433,11 @@ $producedQuantity = getProducedQuantity($con, $prodline);
 
                         <!-- Quantité Fabriquée -->
                         <div class="col-xl-4 col-md-6 mb-4">
-                            <div class="card border-left-warning shadow h-100 py-2">
+                            <div class="card border-left-primary shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                                 Quantité Fabriquée
                                             </div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="QFAB1">
@@ -412,16 +525,14 @@ $producedQuantity = getProducedQuantity($con, $prodline);
 
                     </div>
 
-                    <!-- CETTE PARTIE PHP POUR QUANTITÉ FABRIQUÉE CHART -->
+                    <!-- CETTE PARTIE PHP POUR QUANTITÉS FABRIQUÉES CHART -->
                     <div class="row">
                         <div class="col">
                             <div class="card shadow mb-4">
-                                <!-- Card Header - Dropdown -->
                                 <div
                                     class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Quantité Fabriquée</h6>
+                                    <h6 class="m-0 font-weight-bold text-primary">Quantités Fabriquées</h6>
                                 </div>
-                                <!-- Card Body -->
                                 <div class="card-body">
                                     <div class="chart-area">
                                         <canvas id="prodQteChart"></canvas>
@@ -430,163 +541,15 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                             </div>
                         </div>
                     </div>
-                    <?php
-                    $query2 = "SELECT SUM(`pack_qty`) AS quantity, cur_date
-                                FROM `prod__pack_operation`
-                                WHERE `prod__pack_operation`.`opn_code` = '5069'
-                                    AND `prod__pack_operation`.`prod_line` = '$prodline'
-                                GROUP BY `cur_date`
-                                ORDER by cur_date DESC LIMIT 7;";
-                    $rslt2 = $con->query($query2);
-                    $tab2 = [];
-                    while ($item2 = $rslt2->fetch_assoc()) {
-                        $tab2[] = $item2;
-                    }
-                    $qfab1 = 0;
-                    $qfab2 = 0;
-                    $qfab3 = 0;
-                    $qfab4 = 0;
-                    $qfab5 = 0;
-                    $qfab6 = 0;
-                    $qfab7 = 0;  // Ajouté pour correspondre au jour J-6
-                    for ($i1 = 0; $i1 < count($tab2); $i1++) {
-                        switch ($tab2[$i1]['cur_date']) {
-                            case date('Y-m-d'):
-                                $qfab1 += $tab2[$i1]['quantity'];
-                                break;
-                            case date('Y-m-d', strtotime("-1 day")):
-                                $qfab2 += $tab2[$i1]['quantity'];
-                                break;
-                            case date('Y-m-d', strtotime("-2 days")):
-                                $qfab3 += $tab2[$i1]['quantity'];
-                                break;
-                            case date('Y-m-d', strtotime("-3 days")):
-                                $qfab4 += $tab2[$i1]['quantity'];
-                                break;
-                            case date('Y-m-d', strtotime("-4 days")):
-                                $qfab5 += $tab2[$i1]['quantity'];
-                                break;
-                            case date('Y-m-d', strtotime("-5 days")):
-                                $qfab6 += $tab2[$i1]['quantity'];
-                                break;
-                            case date('Y-m-d', strtotime("-6 days")): // Ajouté pour correspondre au jour J-6
-                                $qfab7 += $tab2[$i1]['quantity'];
-                                break;
-                        }
-                    }
-                    $date = [
-                        date('d-m-Y', strtotime("-6 days")),
-                        date('d-m-Y', strtotime("-5 days")),
-                        date('d-m-Y', strtotime("-4 days")),
-                        date('d-m-Y', strtotime("-3 days")),
-                        date('d-m-Y', strtotime("-2 days")),
-                        date('d-m-Y', strtotime("-1 day")),
-                        date('d-m-Y')
-                    ];
-                    $qtefab = [$qfab7, $qfab6, $qfab5, $qfab4, $qfab3, $qfab2, $qfab1];
-                    ?>
 
-                    <script>
-                        const prodQteChartCtx = document.getElementById("prodQteChart");
-                        const prodQteChart = new Chart(prodQteChartCtx, {
-                            type: 'bar',
-                            data: {
-                                labels: <?php echo json_encode($date); ?>,
-                                datasets: [{
-                                    label: "Quantité Fabriquée ",
-                                    lineTension: 0.3,
-                                    backgroundColor: "rgba(128, 156, 237)",
-                                    borderColor: "rgba(78, 115, 223, 1)",
-                                    pointRadius: 3,
-                                    pointBackgroundColor: "rgba(78, 115, 223, 1)",
-                                    pointBorderColor: "rgba(78, 115, 223, 1)",
-                                    pointHoverRadius: 3,
-                                    pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
-                                    pointHoverBorderColor: "rgba(78, 115, 223, 1)",
-                                    pointHitRadius: 10,
-                                    pointBorderWidth: 2,
-                                    data: <?php echo json_encode($qtefab); ?>,
-                                }],
-                            },
-                            options: {
-                                maintainAspectRatio: false,
-                                layout: {
-                                    padding: {
-                                        left: 10,
-                                        right: 25,
-                                        top: 25,
-                                        bottom: 0
-                                    }
-                                },
-                                scales: {
-                                    xAxes: [{
-                                        time: {
-                                            unit: 'date'
-                                        },
-                                        gridLines: {
-                                            display: false,
-                                            drawBorder: false
-                                        },
-                                        ticks: {
-                                            maxTicksLimit: 7
-                                        }
-                                    }],
-                                    yAxes: [{
-                                        ticks: {
-                                            maxTicksLimit: 5,
-                                            padding: 10,
-                                            // Include a dollar sign in the ticks
-                                            callback: function(value, index, values) {
-                                                return number_format(value);
-                                            }
-                                        },
-                                        gridLines: {
-                                            color: "rgb(234, 236, 244)",
-                                            zeroLineColor: "rgb(234, 236, 244)",
-                                            drawBorder: false,
-                                            borderDash: [2],
-                                            zeroLineBorderDash: [2]
-                                        }
-                                    }],
-                                },
-                                legend: {
-                                    display: false
-                                },
-                                tooltips: {
-                                    backgroundColor: "rgb(255,255,255)",
-                                    bodyFontColor: "#858796",
-                                    titleMarginBottom: 10,
-                                    titleFontColor: '#6e707e',
-                                    titleFontSize: 14,
-                                    borderColor: '#dddfeb',
-                                    borderWidth: 1,
-                                    xPadding: 15,
-                                    yPadding: 15,
-                                    displayColors: false,
-                                    intersect: false,
-                                    mode: 'index',
-                                    caretPadding: 10,
-                                    callbacks: {
-                                        label: function(tooltipItem, chart) {
-                                            var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
-                                            return datasetLabel + number_format(tooltipItem.yLabel);
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    </script>
-
-                    <!-- CETTE PARTIE PHP POUR QUANTITÉ ENGAGÉE CHART -->
+                    <!-- CETTE PARTIE PHP POUR QUANTITÉS ENGAGÉES CHART -->
                     <div class="row">
                         <div class="col">
                             <div class="card shadow mb-4">
-                                <!-- Card Header - Dropdown -->
                                 <div
                                     class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Quantité Engagée</h6>
+                                    <h6 class="m-0 font-weight-bold text-primary">Quantités Engagées</h6>
                                 </div>
-                                <!-- Card Body -->
                                 <div class="card-body">
                                     <div class="chart-area">
                                         <canvas id="engQteChart"></canvas>
@@ -595,150 +558,6 @@ $producedQuantity = getProducedQuantity($con, $prodline);
                             </div>
                         </div>
                     </div>
-                    <?php
-                    $query2 = "SELECT `qty_eng`, cur_date
-                                FROM `prod__indicator`
-                                WHERE cur_date >= NOW() - INTERVAL 7 DAY
-                                AND prod_line= '$prodline';";
-                    $rslt2 = $con->query($query2);
-                    $tab2 = [];
-                    while ($item2 = $rslt2->fetch_assoc()) {
-                        $tab2[] = $item2;
-                    }
-                    $qeng1 = 0;
-                    $qeng2 = 0;
-                    $qeng3 = 0;
-                    $qeng4 = 0;
-                    $qeng5 = 0;
-                    $qeng6 = 0;
-                    $qeng7 = 0;
-                    $i1 = 0;
-                    for ($i1 = 0; $i1 < count($tab2); $i1++) {
-                        switch ($tab2[$i1]['cur_date']) {
-                            case date('Y-m-d'):
-                                $qeng1 += $tab2[$i1]['qty_eng'];
-                                break;
-                            case date('Y-m-d', strtotime("-1 day")):
-                                $qeng2 += $tab2[$i1]['qty_eng'];
-                                break;
-                            case date('Y-m-d', strtotime("-2 day")):
-                                $qeng3 += $tab2[$i1]['qty_eng'];
-                                break;
-                            case date('Y-m-d', strtotime("-3 day")):
-                                $qeng4 += $tab2[$i1]['qty_eng'];
-                                break;
-                            case date('Y-m-d', strtotime("-4 day")):
-                                $qeng5 += $tab2[$i1]['qty_eng'];
-                                break;
-                            case date('Y-m-d', strtotime("-5 day")):
-                                $qeng6 += $tab2[$i1]['qty_eng'];
-                                break;
-                            case date('Y-m-d', strtotime("-6 day")):
-                                $qeng7 += $tab2[$i1]['qty_eng'];
-                                break;
-                        }
-                    }
-                    $date = [
-                        date('d-m-Y', strtotime("-6 day")),
-                        date('d-m-Y', strtotime("-5 day")),
-                        date('d-m-Y', strtotime("-4 day")),
-                        date('d-m-Y', strtotime("-3 day")),
-                        date('d-m-Y', strtotime("-2 day")),
-                        date('d-m-Y', strtotime("-1 day")),
-                        date('d-m-Y')
-                    ];
-                    $qteeng = [$qeng7, $qeng6, $qeng5, $qeng4, $qeng3, $qeng2, $qeng1];
-                    ?>
-                    <script>
-                        const engQteChartCtx = document.getElementById("engQteChart");
-                        const engQteChart = new Chart(engQteChartCtx, {
-                            type: 'bar',
-                            data: {
-                                labels: <?php echo json_encode($date); ?>,
-                                datasets: [{
-                                    label: "Quantité Engagée ",
-                                    lineTension: 0.3,
-                                    backgroundColor: "rgba(128, 156, 237)",
-                                    borderColor: "rgba(78, 115, 223, 1)",
-                                    pointRadius: 3,
-                                    pointBackgroundColor: "rgba(78, 115, 223, 1)",
-                                    pointBorderColor: "rgba(78, 115, 223, 1)",
-                                    pointHoverRadius: 3,
-                                    pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
-                                    pointHoverBorderColor: "rgba(78, 115, 223, 1)",
-                                    pointHitRadius: 10,
-                                    pointBorderWidth: 2,
-                                    data: <?php echo json_encode($qteeng); ?>,
-                                }],
-                            },
-                            options: {
-                                maintainAspectRatio: false,
-                                layout: {
-                                    padding: {
-                                        left: 10,
-                                        right: 25,
-                                        top: 25,
-                                        bottom: 0
-                                    }
-                                },
-                                scales: {
-                                    xAxes: [{
-                                        time: {
-                                            unit: 'date'
-                                        },
-                                        gridLines: {
-                                            display: false,
-                                            drawBorder: false
-                                        },
-                                        ticks: {
-                                            maxTicksLimit: 7
-                                        }
-                                    }],
-                                    yAxes: [{
-                                        ticks: {
-                                            maxTicksLimit: 5,
-                                            padding: 10,
-                                            // Include a dollar sign in the ticks
-                                            callback: function(value, index, values) {
-                                                return number_format(value);
-                                            }
-                                        },
-                                        gridLines: {
-                                            color: "rgb(234, 236, 244)",
-                                            zeroLineColor: "rgb(234, 236, 244)",
-                                            drawBorder: false,
-                                            borderDash: [2],
-                                            zeroLineBorderDash: [2]
-                                        }
-                                    }],
-                                },
-                                legend: {
-                                    display: false
-                                },
-                                tooltips: {
-                                    backgroundColor: "rgb(255,255,255)",
-                                    bodyFontColor: "#858796",
-                                    titleMarginBottom: 10,
-                                    titleFontColor: '#6e707e',
-                                    titleFontSize: 14,
-                                    borderColor: '#dddfeb',
-                                    borderWidth: 1,
-                                    xPadding: 15,
-                                    yPadding: 15,
-                                    displayColors: false,
-                                    intersect: false,
-                                    mode: 'index',
-                                    caretPadding: 10,
-                                    callbacks: {
-                                        label: function(tooltipItem, chart) {
-                                            var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
-                                            return datasetLabel + number_format(tooltipItem.yLabel);
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    </script>
                 </div>
                 <!-- /.container-fluid -->
             </div>
@@ -768,12 +587,122 @@ $producedQuantity = getProducedQuantity($con, $prodline);
     <script src="js/bootstrap.bundle.min.js"></script>
     <!-- Core plugin JavaScript-->
     <script src="js/jquery.easing.min.js"></script>
-
     <!-- Custom scripts for all pages-->
     <script src="js/sb-admin-2.min.js"></script>
-
     <!-- Page level plugins -->
-    <script src="js/Chart.min.js"></script>
+    <script src="js/chart.min.js"></script>
+
+    <script>
+        // CETTE PARTIE PHP POUR QUANTITÉS FABRIQUÉES CHART
+        const prodQteChartCtx = document.getElementById("prodQteChart").getContext('2d');
+        const prodQteChart = new Chart(prodQteChartCtx, {
+            type: 'bar',
+            data: {
+                labels: <?php echo json_encode($producedQuantities["dates"]); ?>,
+                datasets: [{
+                    label: "Quantités Fabriquées",
+                    backgroundColor: "rgba(128, 156, 237, 1)", // Soft Blue
+                    hoverBackgroundColor: "rgba(78, 115, 223, 1)", // Darker Blue for hover
+                    borderColor: "rgba(78, 115, 223, 1)",
+                    data: <?php echo json_encode($producedQuantities["quantities"]); ?>,
+                }],
+            },
+            options: {
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        // left: 0,
+                        right: 10,
+                        // top: 0,
+                        // bottom: 0
+                    }
+                },
+                scales: {
+                    xAxes: [{
+                        gridLines: {
+                            display: true, // Show grid lines on X-axis
+                            drawBorder: false, // Don't draw the border at the bottom
+                            color: "rgba(200, 200, 200, 0.2)", // Light grid line color
+                        },
+                        ticks: {
+                            maxTicksLimit: 7, // Maximum visible ticks
+                        },
+                        offset: true // Ensure grid lines are drawn at the end of the last label
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true, // Start Y-axis at 0
+                        },
+                        gridLines: {
+                            color: "rgba(200, 200, 200, 0.2)", // Light grid line color
+                        }
+                    }],
+                },
+                legend: {
+                    display: true, // Show legend
+                    position: 'top', // Legend position
+                },
+                tooltips: {
+                    enabled: true, // Enable tooltips
+                }
+            }
+        });
+
+        // CETTE PARTIE PHP POUR QUANTITÉS ENGAGÉES CHART
+        const engQteChartCtx = document.getElementById("engQteChart");
+        const engQteChart = new Chart(engQteChartCtx, {
+            type: 'bar',
+            data: {
+                labels: <?php echo json_encode($engagedQuantities["dates"]); ?>,
+                datasets: [{
+                    label: "Quantités Engagées",
+                    backgroundColor: "rgba(75, 192, 192, 1)", // Soft Green (or rgba(255, 159, 64, 1) for Orange)
+                    hoverBackgroundColor: "rgba(53, 183, 183, 1)", // Darker Green for hover (or rgba(255, 135, 31, 1) for Orange)
+                    borderColor: "rgba(75, 192, 192, 1)", // Same as background color
+                    data: <?php echo json_encode($engagedQuantities["quantities"]); ?>,
+                }],
+            },
+            options: {
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        // left: 0,
+                        right: 10,
+                        // top: 0,
+                        // bottom: 0
+                    }
+                },
+                scales: {
+                    xAxes: [{
+                        gridLines: {
+                            display: true, // Show grid lines on X-axis
+                            drawBorder: false, // Don't draw the border at the bottom
+                            color: "rgba(200, 200, 200, 0.2)", // Light grid line color
+                        },
+                        ticks: {
+                            maxTicksLimit: 7, // Maximum visible ticks
+                        },
+                        offset: true // Ensure grid lines are drawn at the end of the last label
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true, // Start Y-axis at 0
+                        },
+                        gridLines: {
+                            color: "rgba(200, 200, 200, 0.2)", // Light grid line color
+                        }
+                    }],
+                },
+                legend: {
+                    display: true, // Show legend
+                    position: 'top', // Legend position
+                },
+                tooltips: {
+                    enabled: true, // Enable tooltips
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>

@@ -637,7 +637,7 @@ $engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
     <!-- Custom scripts for all pages-->
     <script src="js/sb-admin-2.min.js"></script>
     <!-- Page level plugins -->
-    <script src="js/Chart.min.js"></script>
+    <script src="js/chart.min.js"></script>
 
     <script>
         // CETTE PARTIE PHP POUR QUANTITÉS FABRIQUÉES CHART

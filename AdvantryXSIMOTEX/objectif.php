@@ -275,7 +275,7 @@ require_once './php/config.php';
     <script>
         $(document).ready(function() {
             $('#modelid').select2({
-                placeholder: 'Sélectionner un modèle',
+                placeholder: '--Sélectionner un modèle--',
                 tags: false,
                 tokenSeparators: [',', ' '],
                 maximumSelectionLength: 1,

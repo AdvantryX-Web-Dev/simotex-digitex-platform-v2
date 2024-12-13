@@ -222,8 +222,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                             }
 
                                             foreach ($_SESSION['resultsOFI'] as $ofrow) {
+                                                // var_dump($ofrow);
                                                 if (isset($ofrow['of_num'])) {
-                                                    $of[$i] = $ofrow['of_num'];
+                                                    // $of[$i] = $ofrow['of_num'];
                                                     if (isset($_SESSION['of_num']) && !empty($_SESSION['of_num'])) {
                                                         $of[$i] = $_SESSION['of_num'];
                                                     }

@@ -1,4 +1,29 @@
-<?php session_start(); ?>
+<?php
+
+session_start();
+
+require_once './php/config.php';
+
+$modelID = 0;
+
+if (isset($_GET["model_id"])) {
+
+    $modelID = (int) $_GET["model_id"];
+
+    $sql = "SELECT * FROM init__model WHERE id = $modelID";
+    $rslt = $con->query($sql);
+
+    $modelRes = [];
+
+    while ($item3 = $rslt->fetch_assoc()) {
+        $modelRes[] = $item3;
+    }
+
+    $model = $modelRes[0]['model'];
+}
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -57,22 +82,10 @@
                     <!-- DataTales Example -->
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
-                            <?php
-                            require_once './php/config.php';
 
-                            if (isset($_GET["model_id"])) {
-                                $model = $_GET["model_id"];
-                                $sql = "SELECT * FROM init__model WHERE id=$model";
-                                $rslt = $con->query($sql);
-                                $gam = [];
-                                while ($item3 = $rslt->fetch_assoc()) {
-                                    $gam[] = $item3;
-                                }
-                                $mod = $gam[0]['model'];
-                            ?>
-                                <h6 class="m-0 font-weight-bold text-primary">Modèle-Gamme
-                                    <?php echo ($mod); ?> :
-                                </h6>
+                            <h6 class="m-0 font-weight-bold text-primary">Modèle-Gamme
+                                <?php echo ($model); ?> :
+                            </h6>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -102,49 +115,54 @@
                                         <?php
 
                                         $query3 = "SELECT MAX(`prod__gamme`.`model_id`) as `model_id`, MAX(`init__model`.`model`) as `model`, MAX(`prod__gamme`.`operation_num`) as `operation_num`, MAX(`prod__gamme`.`designation`) AS `designation`, MAX(`prod__gamme`.`unit_time`) as `unit_time`, 
-                                MAX(`prod__gamme`.`qte_h`) as `qte_h`, MAX(`prod__gamme`.`machine_id`) as `machine_id`, MAX(`prod__gamme`.`smartbox`) as `smartbox`, MAX(`prod__gamme`.`import_dt`) as `import_dt` 
-                                FROM `init__model` 
-                                INNER JOIN `prod__gamme` ON `init__model`.`id`= `prod__gamme`.`model_id` 
-                                WHERE `init__model`.`id`=$model GROUP BY `operation_num`;";
+                                                    MAX(`prod__gamme`.`qte_h`) as `qte_h`, MAX(`prod__gamme`.`machine_id`) as `machine_id`, MAX(`prod__gamme`.`smartbox`) as `smartbox`, MAX(`prod__gamme`.`import_dt`) as `import_dt` 
+                                                    FROM `init__model` 
+                                                    INNER JOIN `prod__gamme` ON `init__model`.`id`= `prod__gamme`.`model_id` 
+                                                    WHERE `init__model`.`id`= $modelID GROUP BY `operation_num`;";
+
                                         $rsl3 = $con->query($query3);
                                         $p3_gamme1 = [];
+
                                         while ($item3 = $rsl3->fetch_assoc()) {
                                             $p3_gamme1[] = $item3;
                                         }
-                                        $i = 0;
-                                        while ($i < count($p3_gamme1)) {
+
                                         ?>
+
+                                        <?php $i = 0; ?>
+
+                                        <?php while ($i < count($p3_gamme1)) { ?>
+
                                             <tr>
                                                 <td>
-                                                    <?php echo $p3_gamme1[$i]['operation_num']; ?>
+                                                    <?php echo $p3_gamme1[$i]['operation_num'] ?? ''; ?>
                                                 </td>
                                                 <td>
-                                                    <?php echo $p3_gamme1[$i]['designation']; ?>
+                                                    <?php echo $p3_gamme1[$i]['designation'] ?? ''; ?>
                                                 </td>
                                                 <td>
-                                                    <?php echo $p3_gamme1[$i]['unit_time']; ?>
+                                                    <?php echo $p3_gamme1[$i]['unit_time'] ?? ''; ?>
                                                 </td>
                                                 <td>
-                                                    <?php echo $p3_gamme1[$i]['qte_h']; ?>
+                                                    <?php echo $p3_gamme1[$i]['qte_h'] ?? ''; ?>
+                                                </td>
                                                 <td>
-                                                    <?php echo $p3_gamme1[$i]['machine_id']; ?>
+                                                    <?php echo $p3_gamme1[$i]['machine_id'] ?? ''; ?>
+                                                </td>
                                                 <td>
-                                            <?php echo $p3_gamme1[$i]['smartbox'];
-                                            $i++;
-                                        }
-                                    } ?>
+                                                    <?php echo $p3_gamme1[$i]['smartbox'] ?? ''; ?>
                                                 </td>
                                             </tr>
 
+                                            <?php $i++; ?>
+                                        <?php } ?>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
-
                 </div>
                 <!-- /.container-fluid -->
-
             </div>
             <!-- End of Main Content -->
 
@@ -157,7 +175,6 @@
                 </div>
             </footer>
             <!-- End of Footer -->
-
         </div>
         <!-- End of Content Wrapper -->
 
@@ -170,21 +187,21 @@
     </a>
 
     <!-- Bootstrap core JavaScript-->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
 
     <!-- Core plugin JavaScript-->
-    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="js/jquery.easing.min.js"></script>
 
     <!-- Custom scripts for all pages-->
     <script src="js/sb-admin-2.min.js"></script>
 
     <!-- Page level plugins -->
-    <script src="vendor/datatables/jquery.dataTables.min.js"></script>
-    <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <script src="js/jquery.dataTables.min.js"></script>
+    <script src="js/dataTables.bootstrap4.min.js"></script>
 
     <!-- Page level custom scripts -->
-    <script src="js/demo/datatables-demo.js"></script>
+    <script src="js/datatables-demo.js"></script>
 
 </body>
 

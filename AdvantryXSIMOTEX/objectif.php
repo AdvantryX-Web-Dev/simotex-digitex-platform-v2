@@ -1,3 +1,11 @@
+<?php
+
+date_default_timezone_set('Africa/Tunis');
+
+require_once './php/config.php';
+
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -61,57 +69,46 @@
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <?php
-                                date_default_timezone_set('Africa/Tunis');
-                                require_once './php/config.php';
-                                ?>
+
                                 <form action="objectif.php" method="post">
-                                    <label for="prodline" name="chaineprod" value=""> veuillez choisir la chaine de
-                                        production :</label><br>
-                                    <select
-                                        class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm dropdown-toggle col-xl-2 col-md-2 mb-3 ml-2"
-                                        name="prodline">
-                                        <option value="">-- Choisissez la chaine --</option>
-                                        <?php $sql2 = "SELECT * FROM `init__prod_line`";
+                                    <label for="prodline" name="chaineprod" value="">Veuillez choisir la chaine de production :</label>
+                                    <br>
+                                    <select class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm dropdown-toggle col-xl-2 col-md-2 mb-3 ml-2" name="prodline">
+                                        <option value="">Choisissez la chaine</option>
+                                        <?php
+                                        $sql2 = "SELECT * FROM `init__prod_line`";
                                         $result2 = mysqli_query($con, $sql2);
-                                        while ($row2 = mysqli_fetch_assoc($result2)) { ?>
-                                            <option value1='<?php echo $row2["id"] ?>'>
-                                            <?php echo $row2['prod_line'];
-                                        } ?>
+                                        ?>
+                                        <?php while ($row2 = mysqli_fetch_assoc($result2)) { ?>
+                                            <option value1='<?php echo $row2["id"]; ?>'>
+                                                <?php echo $row2['prod_line']; ?>
                                             </option>
-                                    </select><br>
-                                    <label for="model1" name="model" value=""> veuillez choisir le modèle :</label><br>
-                                    <!-- <select
-                                        class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm dropdown-toggle col-xl-2 col-md-2 mb-3 ml-2"
-                                        name="model1"> -->
+                                        <?php } ?>
+                                    </select>
+                                    <br>
+
+                                    <label for="model1" name="model" value="">Veuillez choisir le modèle :</label>
+                                    <br>
                                     <select class="form-select form-control " id="modelid"
                                         aria-label="Default select example" name="model1" style="width:200px" multiple>
                                         <?php
-                                        // include ("php/config.php");
-                                        // $sql = "SELECT * FROM `init__model`";
-                                        // $req = $con->prepare($sql);
-                                        // $req->execute();
-                                        // $result = $req->get_result();
-                                        // $models = $result->fetch_all(MYSQLI_ASSOC);
-                                        // foreach ($models as $model) {
-                                        //     echo "<option value='{$model['id']}'>{$model['model']}</option>";
-                                        // }
-                                        ?>
-                                        <?php
                                         $sql1 = "SELECT * FROM `init__model`";
                                         $result1 = mysqli_query($con, $sql1);
-                                        while ($row1 = mysqli_fetch_assoc($result1)) { ?>
-                                            <option value1='<?php echo $row1["id"] ?>'>
-                                            <?php echo $row1['model'];
-                                        } ?>
-                                            </option>
-                                    </select><br>
-                                    <label for="obj1" name="objectif" value=""> Insérer l'objectif :</label><br>
-                                    <input type="number" name="obj1" class="form-control col-xl-1 col-md-2 mb-1 ml-2 "
-                                        value="" min="0"><br>
+                                        ?>
 
-                                    <!-- <label for="effectif" name="eff" value=""> Insérer nombre d'effectif :</label><br>
-                                    <input type="number" name="effectif" class="form-control col-xl-1 col-md-2 mb-1 ml-2 " value=""><br> -->
+                                        <?php while ($row1 = mysqli_fetch_assoc($result1)) { ?>
+                                            <option value1='<?php echo $row1["id"] ?>'>
+                                                <?php echo $row1['model']; ?>
+                                            </option>
+                                        <?php } ?>
+                                    </select>
+                                    <br>
+                                    <br>
+
+                                    <label for="obj1" name="objectif" value="">Insérer l'objectif :</label>
+                                    <br>
+                                    <input type="number" name="obj1" class="form-control col-xl-1 col-md-2 mb-1 ml-2" value="" min="0">
+                                    <br>
 
                                     <input
                                         class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm dropdown-toggle col-xl-1 col-md-2 mb-3 ml-2"
@@ -120,19 +117,17 @@
                                         class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm dropdown-toggle col-xl-1 col-md-2 mb-3 ml-2"
                                         type="submit" name="Bouton2" value="Supprimer">
                                 </form>
+
                                 <?php
-                                //header("content-Type: application/json");
-
-
                                 $obj1 = 0;
                                 $model1 = '';
                                 $prodline = '';
+
                                 if (isset($_POST['Bouton'])) {
                                     if ((isset($_POST['obj1']) && !empty($_POST['obj1'])) || (isset($_POST['model1']) && !empty($_POST['model1'])) || (isset($_POST['prodline']) && !empty($_POST['prodline']))) {
                                         // $effectif = $_POST['effectif'];
                                         $obj1 = $_POST['obj1'];
                                         $model1 = $_POST['model1'];
-
                                         $prodline = $_POST['prodline'];
                                     } else {
                                         die("");
@@ -241,14 +236,13 @@
                                             die("");
                                         }
                                     }
-                                } ?>
+                                }
+                                ?>
                             </div>
                         </div>
                     </div>
-
                 </div>
                 <!-- /.container-fluid -->
-
             </div>
             <!-- End of Main Content -->
 
@@ -264,13 +258,24 @@
 
         </div>
         <!-- End of Content Wrapper -->
-
     </div>
     <!-- End of Page Wrapper -->
+
+    <!-- Scroll to Top Button-->
+
+    <a class="scroll-to-top rounded" href="#page-top"> <i class="fas fa-angle-up"></i> </a>
+
+    <!-- Bootstrap core JavaScript-->
+    <!-- <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>!-->
+
+    <!-- <script src="js/jquery.min.js"></script> -->
+    <script src="js/bootstrap.bundle.min.js"></script>
+
     <script>
         $(document).ready(function() {
             $('#modelid').select2({
-                placeholder: '--Sélectionner un modèle--',
+                placeholder: 'Sélectionner un modèle',
                 tags: false,
                 tokenSeparators: [',', ' '],
                 maximumSelectionLength: 1,
@@ -278,18 +283,6 @@
             });
         });
     </script>
-    <!-- Scroll to Top Button-->
-    <a class="scroll-to-top rounded" href="#page-top"> <i class="fas fa-angle-up"></i> </a>
-
-    <!-- Bootstrap core JavaScript-->
-    <!-- <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>!-->
-
-
-    <!-- <script src="js/jquery.min.js"></script> -->
-    <script src="js/bootstrap.bundle.min.js"></script>
-    <!-- 
-
 </body>
 
 </html>

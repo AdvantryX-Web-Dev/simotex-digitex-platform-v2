@@ -1,5 +1,7 @@
 <?php
 
+session_start();
+
 // Set the default timezone first
 date_default_timezone_set('Africa/Tunis');
 

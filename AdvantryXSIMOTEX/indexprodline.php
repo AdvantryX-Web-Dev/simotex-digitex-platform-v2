@@ -1,5 +1,7 @@
 <?php
 
+session_start();
+
 date_default_timezone_set('Africa/Tunis');
 
 require_once './php/config.php';

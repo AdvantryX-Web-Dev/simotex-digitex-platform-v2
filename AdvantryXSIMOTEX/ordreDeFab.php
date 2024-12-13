@@ -1,5 +1,7 @@
 <?php
+
 session_start();
+
 require_once './php/config.php';
 
 function session_expired()
@@ -27,10 +29,12 @@ if (session_expired()) {
     header('Location: ' . $_SERVER['PHP_SELF']);
     exit();
 }
+
 // Initialiser les variables de session si elles ne sont pas définies
 if (!isset($_SESSION['resultsOFI'])) {
     $_SESSION['resultsOFI'] = [];
 }
+
 // Traitement du formulaire lorsque soumis
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Initialisation des variables pour les valeurs par défaut ou les valeurs du formulaire
@@ -40,16 +44,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $results = [];
 
     $sql = "SELECT DISTINCT`prod__of`.`of_num`, `prod__of`.`model_id`,
-                                `init__model`.`model`,
-                                `prod__of`.`client`, `prod__of`.`asm_shop`, `prod__of`.`of_state`, `prod__of`.`quantity`, `prod__of`.`import_dt`
-                                FROM `prod__of`
-                                INNER JOIN `init__model` ON `prod__of`.`model_id`= `init__model`.`id`
-                                   ";
+            `init__model`.`model`,
+            `prod__of`.`client`, `prod__of`.`asm_shop`, `prod__of`.`of_state`, `prod__of`.`quantity`, `prod__of`.`import_dt`
+            FROM `prod__of`
+            INNER JOIN `init__model` ON `prod__of`.`model_id`= `init__model`.`id`";
 
     $whereClause = "";
 
     if (!empty($ofs)) {
-
         $whereClause .= " AND  `prod__of`.`of_num` = '$ofs'";
     }
     if (!empty($models)) {
@@ -60,7 +62,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!empty($whereClause)) {
         $sql .= " WHERE 1=1 $whereClause";
     }
-
 
     $req = $con->query($sql);
 
@@ -77,12 +78,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     header('Location: ' . $_SERVER['PHP_SELF']);
     exit();
 }
+
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -108,7 +110,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             white-space: nowrap;
         }
     </style>
-
 </head>
 
 <body id="page-top">
@@ -156,12 +157,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <input type="text" class="form-control" id="of" name="of" value="<?php echo $_SESSION['ofs'] ?? ''; ?>">
                                 </div>
 
-
-
                                 <div class="col-md-12 mt-3">
                                     <button type="submit" class="btn btn-primary" id="submitButton">Valider</button>
                                 </div>
-
                             </form>
                         </div>
                         <div class="card-body">
@@ -186,11 +184,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                                             <?php
                                             require_once './php/config.php';
-
                                             // Récupération des données de la table p1_of avec des Ofs Distincts
-
                                             // $p1_of = mysqli_query($con, $sqlof);
-
                                             // Récupération des données de la table p2_packet
                                             $sqlpacket = "SELECT DISTINCT`pack_num`, `of_num`,`quantity` FROM `prod__packet`";
                                             $p2_packet = mysqli_query($con, $sqlpacket);
@@ -371,9 +366,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             });
         });
     </script>
-
-
-
 </body>
 
 </html>

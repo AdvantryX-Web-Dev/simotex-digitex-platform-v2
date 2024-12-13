@@ -1,8 +1,8 @@
 <?php
 
 // Database configuration
-$dbHost = '127.0.0.1';
-// $dbHost = 'db';
+// $dbHost = '127.0.0.1';
+$dbHost = 'db';
 $dbUsername = 'root';
 $dbPassword = '#R3DR&uE3k0RuMk38';
 $dbName = 'db_simotex';

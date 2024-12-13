@@ -45,7 +45,7 @@ function getPresentOperators($con, $prodline): int
     // Check if statement preparation is successful
     if (!$stmt) {
         // Log an error message if preparation failed
-        error_log("Database statement preparation failed: " . $con->error);
+        error_log("Database statement preparation failed (getPresentOperators): " . $con->error);
         return 0; // Return 0 or an appropriate value on error
     }
 

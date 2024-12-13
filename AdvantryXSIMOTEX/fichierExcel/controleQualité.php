@@ -212,4 +212,3 @@ if (isset($_POST["submit3"])) {
     $writer->save('php://output');
     exit();
 }
-?>

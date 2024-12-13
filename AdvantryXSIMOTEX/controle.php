@@ -140,7 +140,8 @@ session_start();
                                     FROM
                                         `prod__eol_control` pc
                                     LEFT JOIN(
-                                        SELECT `prod__eol_pack_defect`.`pack_num`,
+                                        -- SELECT `prod__eol_pack_defect`.`pack_num`,
+                                        SELECT `prod__eol_pack_defect`.`eol_control_id`,
                                             GROUP_CONCAT(
                                                 CONCAT(
                                                     `init__eol_defect`.`code`,
@@ -152,10 +153,11 @@ session_start();
                                             `prod__eol_pack_defect`
                                         LEFT JOIN `init__eol_defect` ON `prod__eol_pack_defect`.`defect_code` = `init__eol_defect`.`code`
                                         GROUP BY
-                                            `prod__eol_pack_defect`.`pack_num`
+                                            `prod__eol_pack_defect`.`eol_control_id`
                                     ) AS defect_designations
                                     ON
-                                        defect_designations.`pack_num` = pc.`pack_num`
+                                        -- defect_designations.`pack_num` = pc.`pack_num`
+                                        defect_designations.`eol_control_id` = pc.`id`
                                     LEFT JOIN `prod__packet` pp ON
                                         pc.`pack_num` = pp.`pack_num`
                                     WHERE
@@ -202,7 +204,7 @@ session_start();
                                                     <?php if ($pack[$i]['returned'] == 0) {
                                                         echo '';
                                                     } else {
-                                                        echo nl2br($pack[$i]['designation']);
+                                                        echo nl2br($pack[$i]['designation'] ?? '');
                                                     } ?>
                                                 </td>
 

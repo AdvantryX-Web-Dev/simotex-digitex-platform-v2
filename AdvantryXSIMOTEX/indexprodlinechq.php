@@ -331,7 +331,7 @@ $engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>SIMOTEX DigiTex By Advantry X</title>
+    <title>SIMOTEX | DigiTex By Advantry X</title>
     <!-- Favicon-->
     <link rel="icon" type="image/x-icon" href="img/favicon.ico" />
 

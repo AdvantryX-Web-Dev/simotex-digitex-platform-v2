@@ -12,7 +12,7 @@ session_start();
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>SIMOTEX DigiTex By Advantry X</title>
+    <title>SIMOTEX | DigiTex By Advantry X</title>
     <!-- Favicon-->
     <link rel="icon" type="image/x-icon" href="img/favicon.ico" />
 
@@ -249,7 +249,7 @@ session_start();
     </a>
 
     <!-- Logout Modal-->
-    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    <!-- <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -266,7 +266,7 @@ session_start();
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Bootstrap core JavaScript-->
     <script src="js/jquery.min.js"></script>

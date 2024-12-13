@@ -75,19 +75,6 @@ $presentOperators = getPresentOperators($con, $prodline);
 function calculateObjective($con, $prodline): array
 {
     // Query to get the latest rendement_objectif and temps_de_gamme
-    // $query = "SELECT 
-    //             prod__prod_line.objective, 
-    //             -- init__prod_line.prod_line, 
-    //             init__model.model 
-    //         FROM 
-    //             prod__prod_line 
-    //         INNER JOIN init__prod_line ON prod__prod_line.prod_line_id = init__prod_line.id 
-    //         INNER JOIN init__model ON init__model.id = prod__prod_line.model_id 
-    //         WHERE 
-    //             DATE(prod__prod_line.cur_date) = CURDATE()
-    //             AND init__prod_line.prod_line = ? 
-    //         ORDER BY 
-    //             prod__prod_line.id DESC;";
     $query = "SELECT 
                 p.objective AS objective, 
                 m.model AS model
@@ -130,7 +117,8 @@ function calculateObjective($con, $prodline): array
     // Return rows if data exists; otherwise, return default
     return !empty($data) ? $data : [];
 }
-// $objData = calculateObjective($con, $prodline);
+$objData = calculateObjective($con, $prodline);
+// var_dump($objData);
 
 function getEngagedQuantity($con, $prodline): int
 {
@@ -425,7 +413,14 @@ $engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">objectif</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="Obj1">
-                                                _
+                                                <?php if (empty($objData)): ?>
+                                                    _
+                                                <?php else: ?>
+                                                    <?php foreach ($objData as $row): ?>
+                                                        <?php echo htmlspecialchars($row['objective'] ?? 0); ?>
+                                                        <br>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </div>

@@ -584,7 +584,7 @@ $engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Contrôle Qualité</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="CQ1">
-                                                <?php echo (round($defectiveRate["defective_rate"], 2)); ?>
+                                                <?php echo (round($defectiveRate["defective_rate"], 2)) . '%'; ?>
                                             </div>
                                         </div>
                                     </div>

@@ -76,7 +76,6 @@ $presentOperators = getPresentOperators($con, $prodline);
 
 function calculateObjective($con, $prodline): array
 {
-    // Query to get the latest rendement_objectif and temps_de_gamme
     // $query = "SELECT 
     //             prod__prod_line.objective, 
     //             -- init__prod_line.prod_line, 

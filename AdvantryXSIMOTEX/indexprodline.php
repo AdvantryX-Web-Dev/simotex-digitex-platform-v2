@@ -480,7 +480,7 @@ $engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
                         <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm dropdown-toggle mt-4"
                             type="button" id="deroulantb" data-toggle="dropdown" aria-haspopup="true"
                             aria-expanded="false">
-                            <?php echo ($prodline == "CH_Q" ? "Chaine Qualité" : $prodline); ?>
+                            <?php echo $prodline; ?>
                         </button>
 
                         <?php

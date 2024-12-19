@@ -574,43 +574,55 @@ $engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
                 }],
             },
             options: {
+                responsive: true, // Ensure responsiveness
                 maintainAspectRatio: false,
                 layout: {
                     padding: {
                         // left: 0,
-                        right: 10,
+                        right: 10, // Add padding to the right
                         // top: 0,
                         // bottom: 0
                     }
                 },
                 scales: {
-                    xAxes: [{
-                        gridLines: {
-                            display: true, // Show grid lines on X-axis
-                            drawBorder: false, // Don't draw the border at the bottom
+                    x: { // Configuration for the X-axis
+                        grid: {
+                            display: true,
+                            drawBorder: false,
                             color: "rgba(200, 200, 200, 0.2)", // Light grid line color
                         },
                         ticks: {
-                            maxTicksLimit: 7, // Maximum visible ticks
+                            maxTicksLimit: 7, // Limit the number of ticks
                         },
-                        offset: true // Ensure grid lines are drawn at the end of the last label
-                    }],
-                    yAxes: [{
-                        ticks: {
-                            beginAtZero: true, // Start Y-axis at 0
-                        },
-                        gridLines: {
+                    },
+                    y: { // Configuration for the Y-axis
+                        beginAtZero: true, // Ensure Y-axis starts at 0
+                        grid: {
                             color: "rgba(200, 200, 200, 0.2)", // Light grid line color
-                        }
-                    }],
+                        },
+                    },
                 },
-                legend: {
-                    display: true, // Show legend
-                    position: 'top', // Legend position
+                plugins: {
+                    legend: {
+                        display: true, // Show legend
+                        position: 'top', // Position legend at the top
+                    },
+                    // title: {
+                    //     display: true, // Display chart title
+                    //     text: 'Production Quantities Over Time', // Title text
+                    //     font: {
+                    //         size: 16, // Font size
+                    //     },
+                    //     color: '#333', // Font color
+                    // },
+                    tooltip: {
+                        enabled: true, // Enable tooltips
+                    }
                 },
-                tooltips: {
-                    enabled: true, // Enable tooltips
-                }
+                hover: {
+                    mode: 'index', // Highlight the entire bar on hover
+                    intersect: false,
+                },
             }
         });
 
@@ -629,43 +641,55 @@ $engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
                 }],
             },
             options: {
+                responsive: true, // Ensure responsiveness
                 maintainAspectRatio: false,
                 layout: {
                     padding: {
                         // left: 0,
-                        right: 10,
+                        right: 10, // Add padding to the right
                         // top: 0,
                         // bottom: 0
                     }
                 },
                 scales: {
-                    xAxes: [{
-                        gridLines: {
-                            display: true, // Show grid lines on X-axis
-                            drawBorder: false, // Don't draw the border at the bottom
+                    x: { // Configuration for the X-axis
+                        grid: {
+                            display: true,
+                            drawBorder: false,
                             color: "rgba(200, 200, 200, 0.2)", // Light grid line color
                         },
                         ticks: {
-                            maxTicksLimit: 7, // Maximum visible ticks
+                            maxTicksLimit: 7, // Limit the number of ticks
                         },
-                        offset: true // Ensure grid lines are drawn at the end of the last label
-                    }],
-                    yAxes: [{
-                        ticks: {
-                            beginAtZero: true, // Start Y-axis at 0
-                        },
-                        gridLines: {
+                    },
+                    y: { // Configuration for the Y-axis
+                        beginAtZero: true, // Ensure Y-axis starts at 0
+                        grid: {
                             color: "rgba(200, 200, 200, 0.2)", // Light grid line color
-                        }
-                    }],
+                        },
+                    },
                 },
-                legend: {
-                    display: true, // Show legend
-                    position: 'top', // Legend position
+                plugins: {
+                    legend: {
+                        display: true, // Show legend
+                        position: 'top', // Position legend at the top
+                    },
+                    // title: {
+                    //     display: true, // Display chart title
+                    //     text: 'Production Quantities Over Time', // Title text
+                    //     font: {
+                    //         size: 16, // Font size
+                    //     },
+                    //     color: '#333', // Font color
+                    // },
+                    tooltip: {
+                        enabled: true, // Enable tooltips
+                    }
                 },
-                tooltips: {
-                    enabled: true, // Enable tooltips
-                }
+                hover: {
+                    mode: 'index', // Highlight the entire bar on hover
+                    intersect: false,
+                },
             }
         });
     </script>

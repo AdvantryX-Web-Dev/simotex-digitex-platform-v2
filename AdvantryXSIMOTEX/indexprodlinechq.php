@@ -566,7 +566,7 @@ $engagedQuantities = getEngagedQuantitiesByLast7WorkingDays(
             data: {
                 labels: <?php echo json_encode($producedQuantities["dates"]); ?>,
                 datasets: [{
-                    label: "Quantités Fabriquées",
+                    label: "Quantités Sorties",
                     backgroundColor: "rgba(128, 156, 237, 1)", // Soft Blue
                     hoverBackgroundColor: "rgba(78, 115, 223, 1)", // Darker Blue for hover
                     borderColor: "rgba(78, 115, 223, 1)",

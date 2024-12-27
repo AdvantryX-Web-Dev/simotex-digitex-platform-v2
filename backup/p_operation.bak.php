@@ -1,7 +1,5 @@
 <?php
-
 session_start();
-
 require_once './php/config.php';
 
 function session_expired()
@@ -21,7 +19,6 @@ function session_expired()
     $_SESSION['last_activity'] = time();
     return false;
 }
-
 // Vider session si expirée
 if (session_expired()) {
     session_unset();
@@ -29,7 +26,6 @@ if (session_expired()) {
     header('Location: ' . $_SERVER['PHP_SELF']);
     exit();
 }
-
 // $operators = $_POST['operator'] ?? [];
 // $digiTexes = $_POST['digiTex'] ?? [];
 // $models = $_POST['model'] ?? [];
@@ -104,7 +100,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -117,7 +112,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Maille Club | DigiTex By Advantry X</title>
+    <title>SIMOTEX | DigiTex By Advantry X</title>
     <!-- Favicon-->
     <link rel="icon" type="image/x-icon" href="img/favicon.ico" />
 
@@ -241,7 +236,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                     <thead>
                                         <tr>
-                                            <th>Modifier</th>
                                             <th>Réf de l'OF</th>
                                             <th>Réf Modèle</th>
                                             <th>Chaine</th>
@@ -256,17 +250,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         </tr>
                                     </thead>
                                     <tbody>
+
                                         <?php foreach ($_SESSION['results'] as $row) { ?>
                                             <tr>
-                                                <td>
-                                                    <a href='p_operation_edit.php?poperation=<?php echo ($row['id']) ?>'>
-                                                        <img src="./img/edit.png" alt="icone" width="17mm" height="17mm">
-                                                    </a>
-                                                    &emsp;
-                                                    <a href='p_operation_delete.php?poperation=<?php echo ($row['id']) ?>'>
-                                                        <img src="./img/delete.png" alt="icone" width="17mm" height="17mm">
-                                                    </a>
-                                                </td>
                                                 <td><?= $row['of_num'] ?></td>
                                                 <td><?= $row['model'] ?></td>
                                                 <td><?= $row['prod_line'] ?></td>

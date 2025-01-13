@@ -72,7 +72,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     if (!empty($whereClause)) {
-        $sql .= " WHERE 1=1 $whereClause AND YEAR(op.cur_date)= YEAR(CURRENT_DATE)";
+        // $sql .= " WHERE 1=1 $whereClause AND YEAR(op.cur_date)= YEAR(CURRENT_DATE)";
+        $sql .= " WHERE 1=1 $whereClause";
     }
 
     $sql .= " ORDER BY op.cur_date DESC";

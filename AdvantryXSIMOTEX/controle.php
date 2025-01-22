@@ -1,5 +1,9 @@
 <?php
+
 session_start();
+
+require_once './php/config.php';
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -59,7 +63,6 @@ session_start();
                     <!-- DataTales Example -->
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
-                            <?php require_once './php/config.php'; ?>
                             <h6 class="m-0 font-weight-bold text-primary">Contrôle qualité bout de chaine:</h6>
                             <!-- <div class="mb-0 mt-2 mr-2"><a href='edit.php?TAB=<?php //echo ("p2_paquet") 
                                                                                     ?>'><img src="./img/add-file.png" alt="icone" width="25mm" height="25mm"></a></div> -->
@@ -72,26 +75,27 @@ session_start();
                                     <select name="prod_line" class="form-control"> Chaine de Production
                                         <option>Tous</option>
                                         <?php
-                                        require_once './php/config.php';
-                                        $result = $con->query("SELECT `prod_line` FROM `init__prod_line`");
+                                        $result = $con->query("SELECT `prod_line` FROM `init__prod_line` WHERE prod_line NOT LIKE 'CH_Q' ORDER BY id ASC");
                                         while ($row = $result->fetch_assoc()) {
                                             echo "<option>{$row['prod_line']}</option>";
                                         }
                                         ?>
                                     </select>
                                 </div>
+
+                                <!-- 
                                 <div class="col-md-2 float-right">
                                     <select name="operatrice" class="form-control"> Opératrice
                                         <option>Opératrice</option>
-                                        <?php
-                                        require_once './php/config.php';
+                                        <?php /*
                                         $result = $con->query("SELECT `matricule` FROM `init__employee` ");
                                         while ($row = $result->fetch_assoc()) {
                                             echo "<option>{$row['matricule']}</option>";
                                         }
-                                        ?>
+                                        */ ?>
                                     </select>
-                                </div>
+                                </div> -->
+
                                 <div class="col-md-2 float-right">
                                     <input type="date" name="date" class="form-control float-right">
                                 </div>

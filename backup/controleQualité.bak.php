@@ -8,6 +8,7 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 if (isset($_POST["submit3"])) {
     $prod_line = isset($_POST["prod_line"]) ? $_POST["prod_line"] : null;
+    // $operatrice = isset($_POST["operatrice"]) ? $_POST["operatrice"] : null;
     $date = isset($_POST["date"]) ? $_POST["date"] : null;
 
     // Récupération des codes de défaut dynamiquement
@@ -27,6 +28,7 @@ if (isset($_POST["submit3"])) {
 
     // Requête principale
     $sql = "SELECT
+                -- CONCAT(emp.first_name, ' ', emp.last_name) AS optc,
                 ppo.pack_num AS pack_num,
                 ppo.pack_qty  AS pack_qty,
               $selectPartStr,
@@ -34,6 +36,7 @@ if (isset($_POST["submit3"])) {
                 MIN(pcc.defective_pcs) AS def
             FROM
                 prod__pack_operation ppo
+            -- JOIN init__employee emp ON ppo.operator = emp.matricule
             LEFT JOIN
                 prod__eol_pack_defect ppd ON ppo.pack_num = ppd.pack_num
             LEFT JOIN (
@@ -49,6 +52,7 @@ if (isset($_POST["submit3"])) {
                     pack_num
             ) pcc ON ppo.pack_num = pcc.pack_num
          WHERE
+                -- ppo.operator = '$operatrice' AND
                 ppo.prod_line = '$prod_line' AND
                 ppo.cur_date = DATE_FORMAT('$date', '%Y-%m-%d')
             GROUP BY
@@ -159,6 +163,7 @@ if (isset($_POST["submit3"])) {
             $currentRow++;
         }
     }
+
 
     // En-tête des totaux
     $sheet->setCellValue('A' . $currentRow, 'TOTAL DEFAUTS \ TOTAL DEFECTUEUX');

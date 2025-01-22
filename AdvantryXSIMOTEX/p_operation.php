@@ -278,7 +278,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                 <td><?= $row['unit_time'] ?></td>
                                                 <td><?= $row['operator'] . ' | ' . $row['nomOp'] ?></td>
                                                 <td><?= $row['smartbox'] ?></td>
-                                                <td><?= $row['cur_date'] ?></td>
+                                                <td><?= $row['cur_date'] . ' ' . $row['cur_time'] ?></td>
                                             </tr>
                                         <?php }
                                         ?>

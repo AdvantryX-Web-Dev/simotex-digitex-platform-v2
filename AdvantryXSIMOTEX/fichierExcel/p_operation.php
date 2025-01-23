@@ -7,6 +7,9 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
+// print_r($_SESSION['results']);
+// die;
+
 if (!empty($_SESSION['results'])) {
 
     $startDate = $_SESSION['startDate'] ?? null;
@@ -66,7 +69,7 @@ if (!empty($_SESSION['results'])) {
         $sheet->setCellValue($columnIndex++ . $rowIndex, $row['unit_time']);
         $sheet->setCellValue($columnIndex++ . $rowIndex, $row['operator'] . ' | ' . $row['nomOp']);
         $sheet->setCellValue($columnIndex++ . $rowIndex, $row['smartbox']);
-        $sheet->setCellValue($columnIndex++ . $rowIndex, $row['cur_date']);
+        $sheet->setCellValue($columnIndex++ . $rowIndex, $row['cur_date'] . " " . $row['cur_time']);
         $rowIndex++;
     }
     // Définir le nom du fichier et les en-têtes

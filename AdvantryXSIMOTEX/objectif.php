@@ -72,10 +72,10 @@ require_once './php/config.php';
                         <div class="card-body">
                             <div class="table-responsive">
 
-                                <form action="objectif.php" method="post">
+                                <form action="objectif.php" method="post" id="objForm">
                                     <label for="prodline" name="chaineprod" value="">Veuillez choisir la chaine de production :</label>
                                     <br>
-                                    <select class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm dropdown-toggle col-xl-2 col-md-2 mb-3 ml-2" name="prodline">
+                                    <select class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm dropdown-toggle col-xl-2 col-md-2 mb-3 ml-2" name="prodline" id="prodline">
                                         <option value="">Choisissez la chaine</option>
                                         <?php
                                         $sql2 = "SELECT * FROM `init__prod_line`";
@@ -91,7 +91,7 @@ require_once './php/config.php';
 
                                     <label for="model1" name="model" value="">Veuillez choisir le modèle :</label>
                                     <br>
-                                    <select class="form-select form-control " id="modelid"
+                                    <select class="form-select form-control" id="modelid"
                                         aria-label="Default select example" name="model1" style="width:200px" multiple>
                                         <?php
                                         $sql1 = "SELECT * FROM `init__model`";
@@ -109,7 +109,7 @@ require_once './php/config.php';
 
                                     <label for="obj1" name="objectif" value="">Insérer l'objectif :</label>
                                     <br>
-                                    <input type="number" name="obj1" class="form-control col-xl-1 col-md-2 mb-1 ml-2" value="" min="0">
+                                    <input type="number" name="obj1" id="obj1" class="form-control col-xl-1 col-md-2 mb-1 ml-2" value="0" min="0">
                                     <br>
 
                                     <input
@@ -282,6 +282,23 @@ require_once './php/config.php';
                 tokenSeparators: [',', ' '],
                 maximumSelectionLength: 1,
                 language: "fr"
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("objForm").addEventListener("submit", function(event) {
+                var prodline = document.getElementById("prodline").value.trim();
+                var model = document.getElementById("modelid").value.trim();
+                var obj = document.getElementById("obj1").value.trim();
+
+                // console.log(prodline);
+                // console.log(model);
+                // console.log(obj);
+
+                if (!prodline || !model) {
+                    event.preventDefault(); // Empêche la soumission du formulaire
+                    alert("Veuillez remplir tous les champs.");
+                }
             });
         });
     </script>

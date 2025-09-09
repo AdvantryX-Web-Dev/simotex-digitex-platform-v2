@@ -4,7 +4,9 @@
 $dbHost = '127.0.0.1';
 // $dbHost = 'db';
 $dbUsername = 'root';
-$dbPassword = '#R3DR&uE3k0RuMk38';
+//$dbPassword = '#R3DR&uE3k0RuMk38';
+$dbPassword = 'Testing321';
+
 $dbName = 'db_simotex';
 
 try {

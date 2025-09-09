@@ -1,24 +1,15 @@
-<?php
-
-session_start();
-
-date_default_timezone_set('Africa/Tunis');
-
-require_once './php/config.php';
-
-?>
-
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 
 <head>
+
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>SIMOTEX | DigiTex By Advantry X</title>
+    <title>ETC Group DigiTex By Advantry X</title>
     <!-- Favicon-->
     <link rel="icon" type="image/x-icon" href="img/favicon.ico" />
 
@@ -30,13 +21,14 @@ require_once './php/config.php';
 
     <!-- Custom styles for this template-->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
-
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Select2 CSS -->
     <link href="css/select2.min.css" rel="stylesheet" />
-    <!-- Select2 JS -->
-    <script src="js/select2.min.js"></script>
+    <style>
+        th,
+        td {
+            white-space: nowrap;
+        }
+    </style>
+
 </head>
 
 <body id="page-top">
@@ -45,7 +37,7 @@ require_once './php/config.php';
     <div id="wrapper">
 
         <!-- Sidebar -->
-        <?php include("sideBare.php"); ?>
+        <?php include ("sideBare.php") ?>
         <!-- End of Sidebar -->
 
         <!-- Content Wrapper -->
@@ -70,61 +62,101 @@ require_once './php/config.php';
                             <h6 class="m-0 font-weight-bold text-primary">Objectif du jour:</h6>
                         </div>
                         <div class="card-body">
-                            <div class="table-responsive">
+                            <div class="form-container">
+                                
+                                <?php
+                                $message = '';
+                                $message_type = '';
+                                if (isset($_SESSION['message'])) {
+                                    $message = $_SESSION['message'];
+                                    $message_type = $_SESSION['message_type'];
+                                    unset($_SESSION['message']);
+                                    unset($_SESSION['message_type']);
+                                }
+                                ?>
+                                
+                                <div id="error-message" class="error-message" <?php echo ($message_type === 'error') ? 'style="display:block;"' : ''; ?>>
+                                    <?php echo ($message_type === 'error') ? $message : ''; ?>
+                                </div>
+                                <div id="success-message" class="success-message" <?php echo ($message_type === 'success') ? 'style="display:block;"' : ''; ?>>
+                                    <?php echo ($message_type === 'success') ? $message : ''; ?>
+                                </div>
+                                
+                                <?php
+                                session_start();
+                                date_default_timezone_set('Africa/Tunis');
+                                require_once './php/config.php';
+                                ?>
+                                <form id="objectifForm" action="objectif.php" method="post">
+                                    <div class="form-group">
+                                        <label for="prodline" class="form-label">
+                                             Chaîne de production <span class="required">*</span>
+                                        </label>
+                                        <select class="form-control form-select" name="prodline" id="prodline" required>
+                                            <option value="">-- Sélectionnez une chaîne de production --</option>
+                                            <?php $sql2 = "SELECT * FROM `init__prod_line`";
+                                            $result2 = mysqli_query($con, $sql2);
+                                            while ($row2 = mysqli_fetch_assoc($result2)) { ?>
+                                                <option value="<?php echo $row2['prod_line'] ?>">
+                                                    <?php echo $row2['prod_line']; ?>
+                                                </option>
+                                            <?php } ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="model1" class="form-label">
+                                            Modèle <span class="required">*</span>
+                                        </label>
 
-                                <form action="objectif.php" method="post" id="objForm">
-                                    <label for="prodline" name="chaineprod" value="">Veuillez choisir la chaine de production :</label>
-                                    <br>
-                                    <select class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm dropdown-toggle col-xl-2 col-md-2 mb-3 ml-2" name="prodline" id="prodline">
-                                        <option value="">Choisissez la chaine</option>
-                                        <?php
-                                        $sql2 = "SELECT * FROM `init__prod_line`";
-                                        $result2 = mysqli_query($con, $sql2);
-                                        ?>
-                                        <?php while ($row2 = mysqli_fetch_assoc($result2)) { ?>
-                                            <option value1='<?php echo $row2["id"]; ?>'>
-                                                <?php echo $row2['prod_line']; ?>
-                                            </option>
-                                        <?php } ?>
-                                    </select>
-                                    <br>
+                                    <?php
+                                    // $sql1 = "SELECT * FROM `init__model`";
+                                    // $result1 = mysqli_query($con, $sql1);
+                                    // while ($row1 = mysqli_fetch_assoc($result1)) { ?>
+                                    <!-- //     <option value1='<?php //echo $row1["id"] ?>'> -->
 
-                                    <label for="model1" name="model" value="">Veuillez choisir le modèle :</label>
-                                    <br>
-                                    <select class="form-select form-control" id="modelid"
-                                        aria-label="Default select example" name="model1" style="width:200px" multiple>
-                                        <?php
-                                        $sql1 = "SELECT * FROM `init__model`";
-                                        $result1 = mysqli_query($con, $sql1);
-                                        ?>
+                                    <?php //echo $row1['model'];
+                                    // } 
+                                    ?>
+                                        <select class="form-control form-select" id="modelid" name="model1" required>
+                                            <option value="">-- Sélectionnez un modèle --</option>
+                                            <?php
+                                            $sql1 = "SELECT * FROM `init__model`";
+                                            $result1 = mysqli_query($con, $sql1);
+                                            while ($row1 = mysqli_fetch_assoc($result1)) { ?>
+                                                <option value="<?php echo $row1['model'] ?>">
+                                                    <?php echo $row1['model']; ?>
+                                                </option>
+                                            <?php } ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="obj1" class="form-label">
+                                             Objectif de production <span class="required">*</span>
+                                        </label>
+                                        <input type="number" name="obj1" id="obj1" class="form-control" 
+                                               placeholder="Entrez l'objectif de production" min="1" required>
+                                    </div>
 
-                                        <?php while ($row1 = mysqli_fetch_assoc($result1)) { ?>
-                                            <option value1='<?php echo $row1["id"] ?>'>
-                                                <?php echo $row1['model']; ?>
-                                            </option>
-                                        <?php } ?>
-                                    </select>
-                                    <br>
-                                    <br>
-
-                                    <label for="obj1" name="objectif" value="">Insérer l'objectif :</label>
-                                    <br>
-                                    <input type="number" name="obj1" id="obj1" class="form-control col-xl-1 col-md-2 mb-1 ml-2" value="0" min="0">
-                                    <br>
+                                    <!-- <label for="effectif" name="eff" value=""> Insérer nombre d'effectif :</label><br>
+                                    <input type="number" name="effectif" class="form-control col-xl-1 col-md-2 mb-1 ml-2 " value=""><br> -->
 
                                     <input
                                         class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm dropdown-toggle col-xl-1 col-md-2 mb-3 ml-2"
                                         type="submit" name="Bouton" value="Enregistrer">
                                     <input
-                                        class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm dropdown-toggle col-xl-1 col-md-2 mb-3 ml-2"
+                                        class="d-none d-sm-inline-block btn btn-sm btn-danger shadow-sm dropdown-toggle col-xl-1 col-md-2 mb-3 ml-2"
                                         type="submit" name="Bouton2" value="Supprimer">
                                 </form>
+                            </div>
+                            <?php
+                                //header("content-Type: application/json");
+                                
 
-                                <?php
                                 $obj1 = 0;
                                 $model1 = '';
                                 $prodline = '';
-
                                 if (isset($_POST['Bouton'])) {
                                     if ((isset($_POST['obj1']) && !empty($_POST['obj1'])) || (isset($_POST['model1']) && !empty($_POST['model1'])) || (isset($_POST['prodline']) && !empty($_POST['prodline']))) {
                                         // $effectif = $_POST['effectif'];
@@ -177,7 +209,7 @@ require_once './php/config.php';
                                         }
                                         $t = $tab6[0]['t'];
                                         // $obj_percent=round(((($t*$obj1)/(540*$effectif))*100), 2) ;
-
+                                
                                         if (count($tab4) != 0) {
                                             $sql5 = "UPDATE `prod__prod_line`SET `objective`=$obj1 ,`remain`=null WHERE `model_id`=$modelid1 AND `prod_line_id`=$id1";
                                             $rslt5 = $con->query($sql5);
@@ -234,17 +266,22 @@ require_once './php/config.php';
                                             $idobj = $tab4[0]['id'];
                                             $sql5 = "DELETE FROM `prod__prod_line` WHERE `id`=$idobj";
                                             $rslt5 = $con->query($sql5);
+                                            $_SESSION['message'] = '<strong>✓ Succès :</strong> L\'objectif a été supprimé avec succès pour le modèle ' . $model1 . ' sur la chaîne ' . $prodline . '.';
+                                            $_SESSION['message_type'] = 'success';
                                         } else {
-                                            die("");
+                                            $_SESSION['message'] = '<strong>⚠️ Erreur :</strong> Aucun objectif trouvé pour ce modèle et cette chaîne de production.';
+                                            $_SESSION['message_type'] = 'error';
                                         }
+                                        header('Location: objectif.php');
+                                        exit();
                                     }
-                                }
-                                ?>
-                            </div>
+                                } ?>
                         </div>
                     </div>
+
                 </div>
                 <!-- /.container-fluid -->
+
             </div>
             <!-- End of Main Content -->
 
@@ -252,7 +289,7 @@ require_once './php/config.php';
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
                     <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; Advantry X <?php echo date("Y"); ?></span>
+                        <span>Copyright &copy; Advantry X 2023</span>
                     </div>
                 </div>
             </footer>
@@ -260,45 +297,30 @@ require_once './php/config.php';
 
         </div>
         <!-- End of Content Wrapper -->
+
     </div>
     <!-- End of Page Wrapper -->
 
     <!-- Scroll to Top Button-->
-
     <a class="scroll-to-top rounded" href="#page-top"> <i class="fas fa-angle-up"></i> </a>
 
-    <!-- Bootstrap core JavaScript-->
-    <!-- <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>!-->
-
-    <!-- <script src="js/jquery.min.js"></script> -->
+    <script src="js/jquery.min.js"></script>
     <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/sb-admin-2.min.js"></script>
+    <!-- Page level plugins -->
+    <script src="js/jquery.dataTables.min.js"></script>
+    <script src="js/dataTables.bootstrap4.min.js"></script>
 
+    <script src="js/datatables-demo.js"></script>
+
+    <script src="js/select2.min.js"></script>
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             $('#modelid').select2({
                 placeholder: '--Sélectionner un modèle--',
                 tags: false,
-                tokenSeparators: [',', ' '],
-                maximumSelectionLength: 1,
+                allowClear: true,
                 language: "fr"
-            });
-        });
-
-        document.addEventListener("DOMContentLoaded", function() {
-            document.getElementById("objForm").addEventListener("submit", function(event) {
-                var prodline = document.getElementById("prodline").value.trim();
-                var model = document.getElementById("modelid").value.trim();
-                var obj = document.getElementById("obj1").value.trim();
-
-                // console.log(prodline);
-                // console.log(model);
-                // console.log(obj);
-
-                if (!prodline || !model) {
-                    event.preventDefault(); // Empêche la soumission du formulaire
-                    alert("Veuillez remplir tous les champs.");
-                }
             });
         });
     </script>

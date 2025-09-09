@@ -23,7 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $isDeleted = deletePOperation($con, (int)$pOperationIDStr);
 
-        header("Location: p_operation.php");
+        if ($isDeleted) {
+            $_SESSION['success'] = "Enregistrement supprimé avec succès.";
+        }
+
+        header("Location: p_operation_admin.php");
 
         exit; // Ensure no further code is executed
 
@@ -32,8 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         error_log("Error in POST request: " . $e->getMessage());
         $_SESSION['error'] = "Error: " . $e->getMessage();
 
-        // Redirect to the same page after successful post to avoid resubmission
-        header("Location: " . $_SERVER['PHP_SELF'] . '?poperation=' . $pOperationIDStr);
+        // Redirect to p_operation_admin.php after error
+        header("Location: p_operation_admin.php");
         exit; // Ensure no further code is executed
     }
 }
@@ -143,7 +147,7 @@ function deletePOperation($con, $pOperationID)
                                 <input type="hidden" id="opn-id" name="opn_id" value="<?php echo htmlspecialchars($pOperationIDStr ?? ''); ?>" required>
 
                                 <button type="submit" class="btn btn-danger">Supprimer</button>
-                                <a href="p_operation.php" class="btn btn-dark ml-1">Retour</a>
+                                <a href="javascript:history.back()" class="btn btn-dark ml-1">Retour</a>
                             </form>
                         </div>
 

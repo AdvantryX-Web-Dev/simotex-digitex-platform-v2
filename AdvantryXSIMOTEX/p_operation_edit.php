@@ -46,8 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['warning'] = "Aucune modification n'a été apportée à l'enregistrement.";
         }
 
-        // Redirect to the same page after successful post to avoid resubmission
-        header("Location: " . $_SERVER['PHP_SELF'] . '?poperation=' . $pOperationIDStr);
+        // Redirect to p_operation_admin.php after successful update
+        header("Location: p_operation_admin.php");
         exit; // Ensure no further code is executed
 
     } catch (Exception $e) {
@@ -55,8 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         error_log("Error in POST request: " . $e->getMessage());
         $_SESSION['error'] = "Error: " . $e->getMessage();
 
-        // Redirect to the same page after successful post to avoid resubmission
-        header("Location: " . $_SERVER['PHP_SELF'] . '?poperation=' . $pOperationIDStr);
+        // Redirect to p_operation_admin.php after error
+        header("Location: p_operation_admin.php");
         exit; // Ensure no further code is executed
     }
 }
@@ -350,7 +350,7 @@ function updatePOperation($con, $pOperationUpdateData)
                                 </div>
 
                                 <button type="submit" class="btn btn-primary">Enregistrer</button>
-                                <a href="p_operation.php" class="btn btn-dark ml-1">Retour</a>
+                                <a href="javascript:history.back()" class="btn btn-dark ml-1">Retour</a>
                             </form>
                         </div>
 

@@ -35,13 +35,9 @@ if (session_expired()) {
 // $models = $_POST['model'] ?? [];
 // $startDate = $_POST['startDate'] ?? '';
 // $endDate = $_POST['endDate'] ?? '';
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $operators = $_POST['operator'] ?? [];
-    $digiTexes = $_POST['digiTex'] ?? [];
-    $models = $_POST['model'] ?? [];
-    // $operation = $_POST['operation'] ?? '';
-    $startDate = $_POST['startDate'] ?? '';
-    $endDate = $_POST['endDate'] ?? '';
+// Fonction pour charger les données
+function loadData($con, $operators = [], $digiTexes = [], $models = [], $startDate = '', $endDate = '')
+{
     $results = [];
     $sql = "SELECT op.*, CONCAT(e.first_name, ' ', e.last_name) AS nomOp  
         FROM `prod__pack_operation` op 
@@ -72,7 +68,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     if (!empty($whereClause)) {
-        // $sql .= " WHERE 1=1 $whereClause AND YEAR(op.cur_date)= YEAR(CURRENT_DATE)";
         $sql .= " WHERE 1=1 $whereClause";
     }
 
@@ -80,29 +75,56 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $req = $con->query($sql);
     if ($req && $req->num_rows > 0) {
-        // Récupérer les résultats dans un tableau
         while ($row = $req->fetch_assoc()) {
             $results[] = $row;
         }
     }
+    return $results;
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $operators = $_POST['operator'] ?? [];
+    $digiTexes = $_POST['digiTex'] ?? [];
+    $models = $_POST['model'] ?? [];
+    $startDate = $_POST['startDate'] ?? '';
+    $endDate = $_POST['endDate'] ?? '';
+
+    $results = loadData($con, $operators, $digiTexes, $models, $startDate, $endDate);
+
     if ($_POST['action'] === 'filter') {
         // Stocker les résultats dans la session
         $_SESSION['results'] = $results;
         $_SESSION['models'] = $models;
         $_SESSION['operators'] = $operators;
         $_SESSION['digiTexes'] = $digiTexes;
-        // $_SESSION['operation'] = $operation;
         $_SESSION['startDate'] = $startDate;
         $_SESSION['endDate'] = $endDate;
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit();
     } else {
-
         $_SESSION['results'] = $results;
         $_SESSION['startDate'] = $startDate;
         $_SESSION['endDate'] = $endDate;
         header('Location: ./fichierExcel/p_operation.php');
         exit();
+    }
+}
+
+// Recharger les données si on revient d'une modification/suppression et qu'il y a des filtres en session
+if (isset($_SESSION['success']) || isset($_SESSION['warning']) || isset($_SESSION['error'])) {
+    if (
+        !empty($_SESSION['operators']) || !empty($_SESSION['digiTexes']) || !empty($_SESSION['models']) ||
+        !empty($_SESSION['startDate']) || !empty($_SESSION['endDate'])
+    ) {
+        $results = loadData(
+            $con,
+            $_SESSION['operators'] ?? [],
+            $_SESSION['digiTexes'] ?? [],
+            $_SESSION['models'] ?? [],
+            $_SESSION['startDate'] ?? '',
+            $_SESSION['endDate'] ?? ''
+        );
+        $_SESSION['results'] = $results;
     }
 }
 
@@ -163,6 +185,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 <div class="card shadow mb-4">
                     <div class="card-header py-3">
+                        <!-- Messages de succès/erreur -->
+                        <?php if (isset($_SESSION['success'])): ?>
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <?php echo $_SESSION['success']; ?>
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <?php unset($_SESSION['success']); ?>
+                        <?php endif; ?>
+
+                        <?php if (isset($_SESSION['warning'])): ?>
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                <?php echo $_SESSION['warning']; ?>
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <?php unset($_SESSION['warning']); ?>
+                        <?php endif; ?>
+
+                        <?php if (isset($_SESSION['error'])): ?>
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <?php echo $_SESSION['error']; ?>
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <?php unset($_SESSION['error']); ?>
+                        <?php endif; ?>
                         <h6 class="m-0 font-weight-bold text-primary">Filtrer les résultats</h6>
                         <form class="d-flex flex-wrap" id="filterForm" method="POST" action="" onsubmit="return validateDates();">
                             <div class="row mb-3">
@@ -375,6 +427,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // }
                     return true;
                 }
+
+                // Disparition automatique des messages après 4 secondes
+                setTimeout(function() {
+                    $('.alert').fadeOut('slow');
+                }, 4000);
             </script>
             <!-- Inclure jQuery et Bootstrap JS -->
         </div>

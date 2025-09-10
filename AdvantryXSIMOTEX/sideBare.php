@@ -90,7 +90,10 @@
             <div class="bg-white py-2 collapse-inner rounded">
                 <a class="collapse-item" href="rh.php">Opératrices</a>
                 <a class="collapse-item" href="presence.php">Présence</a>
+                <a class="collapse-item" href="performanceoperatrice.php">Récap journalier</a>
                 <a class="collapse-item" href="performanceparheure.php">Performances par Heure</a>
+                <a class="collapse-item" href="recapGroupe.php">Récap groupes</a>
+
             </div>
         </div>
     </li>

@@ -84,6 +84,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit();
     }
+
+    // Exporter les données en Excel
     if (!isset($_SESSION['resultsCont']) || $_POST['action'] === 'export') {
         $_SESSION['resultsCont'] = $resultsCont;
         $_SESSION['prod_line'] = $chainePro;

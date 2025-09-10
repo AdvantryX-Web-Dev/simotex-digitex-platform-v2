@@ -1,208 +1,274 @@
 <?php
-require '../vendor/autoload.php';
+// Activer l'affichage des erreurs pour le débogage
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+// Désactiver temporairement la vérification des erreurs pour l'inclusion d'autoload.php
+$errorReporting = error_reporting();
+error_reporting(E_ERROR); // Afficher uniquement les erreurs fatales
+
+// Vérifier le chemin d'accès correct pour autoload.php
+$autoloadPaths = [
+    __DIR__ . '/../vendor/autoload.php',
+    '/var/www/html/AdvantryXSIMOTEX/vendor/autoload.php'
+];
+
+$loaded = false;
+foreach ($autoloadPaths as $path) {
+    if (file_exists($path)) {
+        require $path;
+        $loaded = true;
+        break;
+    }
+}
+
+// Restaurer le niveau de rapport d'erreur
+error_reporting($errorReporting);
+
+if (!$loaded) {
+    die("Erreur: Impossible de trouver le fichier autoload.php. Chemins recherchés: " . implode(", ", $autoloadPaths));
+}
 require_once "../php/config.php";
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-if (isset($_POST["submit3"])) {
+// Augmenter la limite de mémoire pour les gros fichiers
+ini_set('memory_limit', '512M');
+
+// Augmenter le temps d'exécution maximal
+set_time_limit(300); // 5 minutes
+
+try {
+    // Récupérer les paramètres de filtrage
     $prod_line = isset($_POST["prod_line"]) ? $_POST["prod_line"] : null;
+    $operatrice = isset($_POST["operatrice"]) ? $_POST["operatrice"] : null;
     $date = isset($_POST["date"]) ? $_POST["date"] : null;
 
-    // Récupération des codes de défaut dynamiquement
-    $defectCodesQuery = "SELECT DISTINCT defect_code FROM prod__eol_pack_defect";
-    $defectCodesResult = mysqli_query($con, $defectCodesQuery);
-
-    $defectCodes = [];
-    while ($row = $defectCodesResult->fetch_assoc()) {
-        $defectCodes[] = $row['defect_code'];
+    // Si aucun filtre n'est défini ou si les valeurs sont les valeurs par défaut, utiliser les 7 derniers jours
+    if ((!$prod_line || $prod_line == 'Tous') && (!$operatrice || $operatrice == 'Opératrice') && !$date) {
+        $defaultDate = date('Y-m-d', strtotime('-7 days'));
+        $date = $defaultDate;
     }
 
-    $selectParts = [];
-    foreach ($defectCodes as $code) {
-        $selectParts[] = "MIN(CASE WHEN ppd.defect_code = '$code' THEN ppd.defect_num END) AS `$code`";
+    // Construction des conditions WHERE pour la requête
+    $whereConditions = [];
+    
+    // Ajouter la condition de date (par défaut les 7 derniers jours)
+    if ($date) {
+        $whereConditions[] = "pc.`created_at` >= '$date'";
     }
-    $selectPartStr = implode(", ", $selectParts);
-
-    // Requête principale
-    $sql = "SELECT
-                ppo.pack_num AS pack_num,
-                ppo.pack_qty  AS pack_qty,
-              $selectPartStr,
-                MIN(pcc.defects_num) AS defectueux,
-                MIN(pcc.defective_pcs) AS def
+    
+    // Ajouter la condition de ligne de production si spécifiée et différente de "Tous"
+    if ($prod_line && $prod_line != 'Tous') {
+        $whereConditions[] = "pc.`group` = '$prod_line'";
+    }
+    
+    // Ajouter la condition d'opératrice si spécifiée et différente de "Opératrice"
+    if ($operatrice && $operatrice != 'Opératrice') {
+        $whereConditions[] = "po.`operator` = '$operatrice'";
+    }
+    
+    // Construire la clause WHERE
+    $whereClause = "WHERE pc.ctrl_state = 1";
+    if (!empty($whereConditions)) {
+        $whereClause .= " AND " . implode(" AND ", $whereConditions);
+    }
+    
+    // Utiliser la même requête que dans controle.php
+    $query = "SELECT
+                pp.number,
+                pc.`pack_num`,
+                pp.`of_num`,
+                po.`operator` AS operator_matricule,
+                pc.`group` AS prod_line,
+                pc.`quantity`,
+                pp.`size` AS size,
+                pp.`color` AS color,
+                pc.`defective_pcs`,
+                defect_designations.`designation`,
+                defect_designations.`defect_label`,
+                pc.`returned`,
+                DATE(pc.`created_at`) AS cur_date,
+                TIME(pc.`created_at`) AS cur_time
             FROM
-                prod__pack_operation ppo
-            LEFT JOIN
-                prod__eol_pack_defect ppd ON ppo.pack_num = ppd.pack_num
-            LEFT JOIN (
-                SELECT
-                    pack_num,
-                    MIN(defects_num) AS defects_num,
-                    MIN(defective_pcs) AS defective_pcs
+                `prod__eol_control` pc
+            LEFT JOIN(
+                SELECT `prod__eol_pack_defect`.`pack_num`,
+                    GROUP_CONCAT(
+                        CONCAT(
+                            `init__eol_defect`.`code`,
+                            ' : ',
+                            `prod__eol_pack_defect`.`defect_num`
+                        ) SEPARATOR '\n'
+                    ) AS `designation`,
+                    GROUP_CONCAT(
+                        `init__eol_defect`.`designation` SEPARATOR '   /   '
+                    ) AS `defect_label`
                 FROM
-                    prod__eol_control p
-                where created_at =(select MIN(created_at)  FROM
-                    prod__eol_control where pack_num=p.pack_num )
+                    `prod__eol_pack_defect`
+                LEFT JOIN `init__eol_defect` ON `prod__eol_pack_defect`.`defect_code` = `init__eol_defect`.`code`
                 GROUP BY
-                    pack_num
-            ) pcc ON ppo.pack_num = pcc.pack_num
-         WHERE
-                ppo.prod_line = '$prod_line' AND
-                ppo.cur_date = DATE_FORMAT('$date', '%Y-%m-%d')
-            GROUP BY
-                ppo.pack_num, ppo.pack_qty";
-
-    $res = mysqli_query($con, $sql);
-    $rows = [];
-    while ($item = $res->fetch_assoc()) {
-        $rows[] = $item;
-    }
-
-    // Récupération des défauts et catégories
-    $query = "SELECT 
-                d.id AS defect_id, 
-                d.code AS defect_code, 
-                d.designation AS defect_name, 
-                c.id AS category_id, 
-                c.designation AS category_name
-              FROM 
-                init__eol_defect d
-              JOIN 
-                init__eol_def_category c 
-              ON 
-                d.category_id = c.id";
+                    `prod__eol_pack_defect`.`pack_num`
+            ) AS defect_designations
+            ON
+                defect_designations.`pack_num` = pc.`pack_num`
+            LEFT JOIN `prod__packet` pp ON
+                pc.`pack_num` = pp.`pack_num`
+            LEFT JOIN (
+                SELECT pack_num, operator
+                FROM `prod__pack_operation`
+                WHERE `designation` LIKE '%contr%'
+            ) po ON
+                pc.`pack_num` = po.`pack_num`
+            $whereClause
+            ORDER BY cur_date DESC, pp.`of_num` ASC";
 
     $result = mysqli_query($con, $query);
-    $defectsByCategory = [];
-    while ($row = mysqli_fetch_assoc($result)) {
-        $defectsByCategory[$row['category_id']]['category_name'] = $row['category_name'];
-        $defectsByCategory[$row['category_id']]['defects'][] = [
-            'defect_id' => $row['defect_id'],
-            'defect_code' => $row['defect_code'],
-            'defect_name' => $row['defect_name']
-
-        ];
+    
+    if (!$result) {
+        die("Erreur lors de l'exécution de la requête: " . mysqli_error($con));
     }
-
+    
+    $rows = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        $rows[] = $row;
+    }
+    
+    // Vérifier si des données ont été trouvées
+    if (empty($rows)) {
+        die("Aucune donnée trouvée pour les critères sélectionnés. Veuillez modifier vos filtres.");
+    }
+    
     // Création du fichier Excel
     $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
-
-    // Ajout des en-têtes
-    $sheet->setCellValue('A1', 'SIMOTEX');
-    $sheet->setCellValue('E1', 'Formulaire Contrôle Qualité Bout de Chaine');
-    $sheet->setCellValue('M1', 'Page 1 sur 1');
-    $sheet->setCellValue('A3', 'Date: ' . $date);
-    // $sheet->setCellValue('E3', 'Contrôleuse: ' . $operatrice);
-    $sheet->setCellValue('I3', 'GRP: ' . $prod_line);
-    $currentRow = 5;
-    $column = 'C';
-
-    // Première ligne : Répéter "Numéro de paquet" et "Quantité de paquet" pour chaque paquet sur la même ligne
-    foreach ($rows as $row) {
-        $sheet->setCellValue($column . $currentRow, 'Numéro de paquet');
-        $column++;
-        $sheet->setCellValue($column . $currentRow, 'Quantité de paquet');
-        $column++;
+    $sheet->setTitle('Contrôle Qualité');
+    
+    // Définir les en-têtes des colonnes (identiques au tableau de l'image)
+    $headers = [
+        'A' => 'Réf Paquet',
+        'B' => 'Ordre de fabrication',
+        'C' => 'Matricule',
+        'D' => 'Chaine de production',
+        'E' => 'Quantité',
+        'F' => 'Taille',
+        'G' => 'Couleur',
+        'H' => 'Nombre des pièces défaillantes',
+        'I' => 'Défauts',
+        'J' => 'Libellé défauts',
+        'K' => 'Statut',
+        'L' => 'Date & Heure de controle'
+    ];
+    
+    // Ajouter les en-têtes et formater
+    foreach ($headers as $col => $header) {
+        $sheet->setCellValue($col . '1', $header);
     }
-    $sheet->setCellValue($column . $currentRow, 'Total');
-    $currentRow++;
-
-    // Deuxième ligne : Numéros de paquets et Quantités
-    $sheet->setCellValue('A' . $currentRow, 'CODE DEFAUT');
-    $sheet->setCellValue('B' . $currentRow, 'DEFAUT');
-    $column = 'C';
-    foreach ($rows as $row) {
-        $sheet->setCellValue($column . $currentRow, $row['pack_num']);
-        $sheet->setCellValue(++$column . $currentRow, $row['pack_qty']);
-        $column++;
-    }
-    $sheet->setCellValue($column . $currentRow, '');
-
-    $currentRow++; // Passe à la ligne suivante
-
-    // Remplissage des données de défauts par catégorie
-    foreach ($defectsByCategory as $category) {
-        // Ajoute le nom de la catégorie
-        $sheet->mergeCells('A' . $currentRow . ':B' . $currentRow);
-        $sheet->setCellValue('A' . $currentRow, $category['category_name']);
-        $currentRow++; // Passe à la ligne suivante
-
-        foreach ($category['defects'] as $defect) {
-            $sheet->setCellValue('A' . $currentRow, $defect['defect_code']);
-            $sheet->setCellValue('B' . $currentRow, $defect['defect_name']);
-            $column = 'C'; // Commencer à la colonne C pour les données de défauts
-            $totalForDefect = 0;
-            foreach ($rows as $row) {
-                $currentCell = $column . $currentRow;
-
-                // Vérifie s'il existe une valeur pour le code défaut
-                if (isset($row[$defect['defect_code']])) {
-                    $value = $row[$defect['defect_code']];
-                    $sheet->setCellValue($currentCell, $value);
-
-
-                    $totalForDefect += $value;
-                } else {
-                    $sheet->setCellValue($currentCell, 0);
-                }
-
-                // Fusionne les colonnes C et D pour chaque pack
-                $sheet->mergeCells($column . $currentRow . ':' . Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($column) + 1) . $currentRow);
-
-                // Incrémenter de 2 colonnes pour le prochain pack
-                $column = Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($column) + 2);
-            }
-            $sheet->setCellValue($column . $currentRow, $totalForDefect);
-            $currentRow++;
-        }
-    }
-
-    // En-tête des totaux
-    $sheet->setCellValue('A' . $currentRow, 'TOTAL DEFAUTS \ TOTAL DEFECTUEUX');
-
-    $sheet->getStyle('A' . $currentRow)->applyFromArray([
+    
+    // Style pour les en-têtes
+    $headerStyle = [
         'font' => [
             'bold' => true,
         ],
-    ]);
-    $column = 'C';
-    $sumDef = 0;
-    $sumDefecteux = 0;
-    foreach ($rows as $row) {
-        $currentCell = $column . $currentRow;
-        $def = $row['def'];
-        $defectueux = $row['defectueux'];
-
-        $sumDef += $def;
-        $sumDefecteux += $defectueux;
-        // Vérifie s'il existe une valeur pour le code défaut
-        if ($def != null && $defectueux != null) {
-            $sheet->setCellValue($column . $currentRow, $def . " \ " . $defectueux);
-        } else {
-            $sheet->setCellValue($currentCell, 0 . " \ " . 0);
+        'alignment' => [
+            'horizontal' => Alignment::HORIZONTAL_CENTER,
+        ],
+        'fill' => [
+            'fillType' => Fill::FILL_SOLID,
+            'startColor' => [
+                'rgb' => 'E0E0E0',
+            ],
+        ],
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+            ],
+        ],
+    ];
+    
+    $sheet->getStyle('A1:L1')->applyFromArray($headerStyle);
+    
+    // Ajouter les données
+    $row = 2;
+    foreach ($rows as $data) {
+        $sheet->setCellValue('A' . $row, $data['pack_num']);
+        $sheet->setCellValue('B' . $row, $data['of_num']);
+        $sheet->setCellValue('C' . $row, $data['operator_matricule']);
+        $sheet->setCellValue('D' . $row, $data['prod_line']);
+        $sheet->setCellValue('E' . $row, $data['quantity']);
+        $sheet->setCellValue('F' . $row, $data['size']);
+        $sheet->setCellValue('G' . $row, $data['color']);
+        $sheet->setCellValue('H' . $row, $data['defective_pcs']);
+        
+        // Défauts et libellés seulement si retourné
+        if ($data['returned'] == 1) {
+            $sheet->setCellValue('I' . $row, $data['designation'] ?? '');
+            $sheet->setCellValue('J' . $row, $data['defect_label'] ?? '');
         }
-
-        // Fusionne les colonnes C et D pour chaque pack
-        $sheet->mergeCells($column . $currentRow . ':' . Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($column) + 1) . $currentRow);
-
-        // Incrémenter de 2 colonnes pour le prochain pack
-        $column = Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($column) + 2);
+        
+        // Statut
+        $statut = ($data['returned'] == 0) ? 'Validé' : 'Retour prod';
+        $sheet->setCellValue('K' . $row, $statut);
+        
+        // Date et heure
+        $sheet->setCellValue('L' . $row, 'D: ' . $data['cur_date'] . ' T: ' . $data['cur_time']);
+        
+        // Style conditionnel pour le statut
+        if ($data['returned'] == 0) {
+            $sheet->getStyle('K' . $row)->getFont()->getColor()->setRGB('28a745'); // Vert pour Validé
+        } else {
+            $sheet->getStyle('K' . $row)->getFont()->getColor()->setRGB('dc3545'); // Rouge pour Retour prod
+        }
+        
+        $row++;
     }
-    $nextColumn = Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($column));
-    $sheet->setCellValue($nextColumn . $currentRow, $sumDef . " \ " . $sumDefecteux);
-
-    // Écriture dans le fichier
-    $writer = new Xlsx($spreadsheet);
-    $filename = 'CQ_BCh_' . $date . '.xlsx';
-
-    // Forcer le téléchargement du fichier
+    
+    // Ajuster la largeur des colonnes automatiquement
+    foreach (range('A', 'L') as $col) {
+        $sheet->getColumnDimension($col)->setAutoSize(true);
+    }
+    
+    // Appliquer un style aux données
+    $dataStyle = [
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+            ],
+        ],
+        'alignment' => [
+            'vertical' => Alignment::VERTICAL_CENTER,
+        ],
+    ];
+    
+    $sheet->getStyle('A1:L' . ($row - 1))->applyFromArray($dataStyle);
+    
+    // Définir le nom du fichier
+    $filename = 'Controle_Qualite_' . date('Y-m-d') . '.xlsx';
+    
+    // Nettoyer tous les buffers de sortie avant d'envoyer les en-têtes
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+    
+    // Définir les en-têtes HTTP pour le téléchargement
+    header('Content-Description: File Transfer');
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    header('Content-Disposition: attachment;filename="' . $filename . '"');
-    header('Cache-Control: max-age=0');
-
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Content-Transfer-Encoding: binary');
+    header('Expires: 0');
+    header('Cache-Control: must-revalidate');
+    header('Pragma: public');
+    
+    // Enregistrer directement dans la sortie PHP
+    $writer = new Xlsx($spreadsheet);
     $writer->save('php://output');
     exit();
+    
+} catch (Exception $e) {
+    die("Erreur lors de la création du fichier Excel: " . $e->getMessage() . " - Trace: " . $e->getTraceAsString());
 }
+?>

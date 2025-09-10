@@ -58,6 +58,7 @@
                 <h6 class="collapse-header">Partie de contrôle qualité:</h6>
                 <a class="collapse-item" href="controle.php">Contrôle bout de chaine</a>
                 <a class="collapse-item" href="controlechaine.php">Contrôle sur chaine</a>
+                <a class="collapse-item" href="controleProd.php">Retouche / chaine</a>
                 <a class="collapse-item" href="defautec.php">Liste des défauts</a>
             </div>
         </div>

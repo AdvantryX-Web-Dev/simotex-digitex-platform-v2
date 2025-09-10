@@ -68,37 +68,37 @@ session_start();
                         <h1 class="h3 mb-2 text-gray-800">Paquet</h1>
                     </div>
                 </div>
-            </div>
-            <!-- Content Row -->
-            <div class="row">
-                <div class="container-fluid">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <?php
-                            require_once './php/config.php';
-                            if (isset($_GET["pack_num"])) {
-                                $pack = $_GET["pack_num"]; ?>
-                                <h6 class="m-0 font-weight-bold text-primary">Opération sur paquet numéro
-                                    <?php echo ($pack); ?> :
-                                </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                                    <thead>
-                                        <tr>
-                                            <th>Code Opération effectueé</th>
-                                            <th>Designation</th>
-                                            <th>Temps unitaire</th>
-                                            <th>Quantité</th>
-                                            <th>Chaine de production</th>
-                                            <th>Opératrice</th>
-                                            <th>DigiTex</th>
-                                            <th>Date</th>
-                                            <th>Heure</th>
-                                        </tr>
-                                    </thead>
-                                    <!-- <tfoot>
+
+                <!-- Content Row -->
+                <div class="row">
+                    <div class="container-fluid">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <?php
+                                require_once './php/config.php';
+                                if (isset($_GET["pack_num"])) {
+                                    $pack = $_GET["pack_num"]; ?>
+                                    <h6 class="m-0 font-weight-bold text-primary">Opération sur paquet numéro
+                                        <?php echo ($pack); ?> :
+                                    </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                        <thead>
+                                            <tr>
+                                                <th>Code Opération effectueé</th>
+                                                <th>Designation</th>
+                                                <th>Temps unitaire</th>
+                                                <th>Quantité</th>
+                                                <th>Chaine de production</th>
+                                                <th>Opératrice</th>
+                                                <th>DigiTex</th>
+                                                <th>Date</th>
+                                                <th>Heure</th>
+                                            </tr>
+                                        </thead>
+                                        <!-- <tfoot>
                             <tr>
                                 <th>Code Opération effectueé</th>
                                 <th>Designation</th>
@@ -111,59 +111,60 @@ session_start();
                                 <th>heure</th>
                             </tr>
                         </tfoot> -->
-                                    <tbody>
-                                        <?php
-                                        $query1 = "SELECT * FROM `prod__pack_operation` INNER JOIN `init__employee` ON `prod__pack_operation`.`operator`= `init__employee`.`matricule` WHERE pack_num='$pack'";
-                                        $rsl1 = $con->query($query1);
-                                        $p4_pack_operation = [];
-                                        while ($item1 = $rsl1->fetch_assoc()) {
-                                            $p4_pack_operation[] = $item1;
-                                        }
+                                        <tbody>
+                                            <?php
+                                            $query1 = "SELECT * FROM `prod__pack_operation` INNER JOIN `init__employee` ON `prod__pack_operation`.`operator`= `init__employee`.`matricule` WHERE pack_num='$pack'";
+                                            $rsl1 = $con->query($query1);
+                                            $p4_pack_operation = [];
+                                            while ($item1 = $rsl1->fetch_assoc()) {
+                                                $p4_pack_operation[] = $item1;
+                                            }
 
-                                        for ($i = 0; $i < count($p4_pack_operation); $i++) { ?>
-                                            <tr>
-                                                <td>
-                                                    <?php echo $p4_pack_operation[$i]['operation_num']; ?>
-                                                </td>
-                                                <td>
-                                                    <?php echo $p4_pack_operation[$i]['designation']; ?>
-                                                </td>
-                                                <td>
-                                                    <?php echo $p4_pack_operation[$i]['unit_time']; ?>
-                                                </td>
-                                                <td>
-                                                    <?php echo $p4_pack_operation[$i]['pack_qty']; ?>
-                                                </td>
-                                                <td>
-                                                    <?php echo $p4_pack_operation[$i]['prod_line']; ?>
-                                                </td>
-                                                <td> <a
-                                                        href='rh.php?matricule=<?php echo $p4_pack_operation[$i]['operator']; ?>'>
-                                                        <?php echo $p4_pack_operation[$i]['first_name'] . '  ' . $p4_pack_operation[$i]['last_name']; ?>
-                                                    </a></td>
-                                                <td>
-                                                    <?php echo $p4_pack_operation[$i]['smartbox']; ?>
-                                                </td>
-                                                <td>
-                                                    <?php echo $p4_pack_operation[$i]['cur_date']; ?>
-                                                </td>
-                                                <td>
-                                            <?php echo $p4_pack_operation[$i]['cur_time'];
-                                        }
-                                    } ?>
-                                                </td>
-                                            </tr>
-                                    </tbody>
-                                </table>
+                                            for ($i = 0; $i < count($p4_pack_operation); $i++) { ?>
+                                                <tr>
+                                                    <td>
+                                                        <?php echo $p4_pack_operation[$i]['operation_num']; ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php echo $p4_pack_operation[$i]['designation']; ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php echo $p4_pack_operation[$i]['unit_time']; ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php echo $p4_pack_operation[$i]['pack_qty']; ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php echo $p4_pack_operation[$i]['prod_line']; ?>
+                                                    </td>
+                                                    <td> <a
+                                                            href='rh.php?matricule=<?php echo $p4_pack_operation[$i]['operator']; ?>'>
+                                                            <?php echo $p4_pack_operation[$i]['first_name'] . '  ' . $p4_pack_operation[$i]['last_name']; ?>
+                                                        </a></td>
+                                                    <td>
+                                                        <?php echo $p4_pack_operation[$i]['smartbox']; ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php echo $p4_pack_operation[$i]['cur_date']; ?>
+                                                    </td>
+                                                    <td>
+                                                <?php echo $p4_pack_operation[$i]['cur_time'];
+                                            }
+                                        } ?>
+                                                    </td>
+                                                </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    <!-- /.container-fluid -->
                 </div>
-                <!-- /.container-fluid -->
+                <a class="scroll-to-top rounded" href="#page-top">
+                    <i class="fas fa-angle-up"></i>
+                </a>
             </div>
-            <a class="scroll-to-top rounded" href="#page-top">
-                <i class="fas fa-angle-up"></i>
-            </a>
             <!-- Footer -->
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
@@ -176,7 +177,7 @@ session_start();
 
         </div>
     </div>
-    </div>
+  
 
     <!-- Bootstrap core JavaScript-->
     <script src="vendor/jquery/jquery.min.js"></script>

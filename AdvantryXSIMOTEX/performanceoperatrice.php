@@ -11,7 +11,7 @@ session_start();
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>MailleClub | Advantry X</title>
+    <title>SIMOTEX | DigiTex By Advantry X</title>
     <!-- Favicon-->
     <link rel="icon" type="image/x-icon" href="img/favicon.ico" />
 
@@ -96,7 +96,7 @@ session_start();
             <div class="metabase-container">
                 <div class="iframe-container">
                     <iframe
-                        src="http://192.168.0.47:3000/public/dashboard/f95f012d-7c40-4d2d-b9a4-4253bbb8a4e4"
+                        src="http://192.168.1.31:3000/public/question/d107df3b-7eac-4725-bcd4-03f34370a78e"
                         class="metabase-iframe"
                         allowtransparency="true"
                         frameborder="0"

@@ -38,7 +38,9 @@
             <div class="bg-white py-2 collapse-inner rounded">
                 <h6 class="collapse-header">Bureau de méthode:</h6>
                 <a class="collapse-item" href="objectif.php">Insertion d'objectif</a>
+                <a class="collapse-item" href="effectiveReel.php">Effectif réel</a>
                 <a class="collapse-item" href="ordreDeFab.php">Ordre de fabrication</a>
+
                 <a class="collapse-item" href="gammeequilibrage.php">Affectation Opération –<br />Box</a>
                 <a class="collapse-item" href="allpacks.php">Paquets</a>
                 <a class="collapse-item" href="p_operation.php">Opérations</a>

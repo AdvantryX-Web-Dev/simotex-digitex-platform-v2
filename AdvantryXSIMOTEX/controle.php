@@ -136,6 +136,7 @@ session_start();
                                             <th>Défauts</th>
                                             <th>Libellé défaut</th>
                                             <th>Date & Heure de controle</th>
+                                            <th>Détails</th>
                                         </tr>
                                     </thead>
 
@@ -163,6 +164,12 @@ session_start();
                                         pp.`color` AS color
                                     FROM
                                         `prod__eol_control` pc
+                                    INNER JOIN (
+                                        SELECT `pack_num`, MAX(`created_at`) AS `max_created_at`
+                                        FROM `prod__eol_control`
+                                        WHERE `ctrl_state` = 1 AND `created_at` >= '$filterDate'
+                                        GROUP BY `pack_num`
+                                    ) lc ON lc.`pack_num` = pc.`pack_num` AND lc.`max_created_at` = pc.`created_at`
                                     LEFT JOIN(
                                         SELECT `prod__eol_pack_defect`.`pack_num`,
                                             GROUP_CONCAT(
@@ -192,8 +199,7 @@ session_start();
                                     ) po ON
                                         pc.`pack_num` = po.`pack_num`
                                     WHERE
-                                        pc.ctrl_state = 1
-                                        AND pc.`created_at` >= '$filterDate'
+                                        pc.`ctrl_state` = 1
                                     ORDER BY cur_date DESC, pp.`of_num` ASC;";
 
                                         $result = $con->query($query);
@@ -251,6 +257,11 @@ session_start();
                                                    
                                                     <td>
                                                         <?php echo 'D: ' . $row['cur_date'] . '<br>T: ' . $row['cur_time']; ?>
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-sm btn-outline-primary toggle-details" aria-expanded="false" title="Afficher les détails" data-packnum="<?php echo htmlspecialchars($row['pack_num']); ?>">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                         <?php
@@ -315,6 +326,8 @@ session_start();
         </div>
     </div>
 
+    
+
     <!-- Bootstrap core JavaScript-->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
@@ -367,6 +380,52 @@ session_start();
                 if (!models && !ofs) {
                     event.preventDefault(); // Empêche la soumission du formulaire
                     alert("Veuillez remplir au moins un champ pour filtrer les résultats.");
+                }
+            });
+        });
+    </script>
+    <script>
+        // Inline expandable subtable for pack details under the main row
+        $(document).on('click', '.toggle-details', function () {
+            var $btn = $(this);
+            var $icon = $btn.find('i');
+            var packNum = $btn.data('packnum');
+            var $tr = $btn.closest('tr');
+
+            if ($btn.attr('aria-expanded') === 'true') {
+                // collapse: close ALL detail rows and reset all toggles
+                $('.details-row').remove();
+                $('.toggle-details').attr('aria-expanded','false').each(function(){
+                    $(this).find('i').removeClass('fa-eye-slash').addClass('fa-eye');
+                });
+                return;
+            }
+
+            // collapse any other open details to avoid clutter
+            $('.toggle-details[aria-expanded="true"]').each(function(){
+                var $b = $(this);
+                $b.attr('aria-expanded','false').find('i').removeClass('fa-eye-slash').addClass('fa-eye');
+            });
+            $('.details-row').remove();
+
+            // expand current
+            $btn.attr('aria-expanded', 'true');
+            $icon.removeClass('fa-eye').addClass('fa-eye-slash');
+
+            var $placeholder = $('<tr class="details-row" data-parent="' + packNum + '"><td colspan="13"><div class="text-center py-3"><div class="spinner-border text-primary" role="status"><span class="sr-only">Chargement...</span></div></div></td></tr>');
+            $tr.after($placeholder);
+
+            $.ajax({
+             url: 'pack_details_rows.php',
+
+                method: 'GET',
+                data: { pack_num: packNum },
+                success: function (html) {
+                    $placeholder.remove();
+                    $tr.after(html);
+                },
+                error: function () {
+                    $placeholder.find('td').html('<div class="alert alert-danger mb-0">Erreur lors du chargement des détails.</div>');
                 }
             });
         });

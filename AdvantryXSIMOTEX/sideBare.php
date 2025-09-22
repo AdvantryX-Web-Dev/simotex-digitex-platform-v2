@@ -44,7 +44,7 @@
                 <a class="collapse-item" href="gammeequilibrage.php">Affectation Opération –<br />Box</a>
                 <a class="collapse-item" href="allpacks.php">Paquets</a>
                 <a class="collapse-item" href="p_operation.php">Opérations</a>
-                <a class="collapse-item" href="recap_enCours.php">Récap en cours</a>
+                <a class="collapse-item" href="recap_enCours.php">Détail en cours</a>
             </div>
         </div>
     </li>

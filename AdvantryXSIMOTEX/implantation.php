@@ -79,19 +79,26 @@ session_start();
                                         <?php
                                         require_once './php/config.php';
                                         // require_once './php/config_maint.php';
-                                        $sql = "SELECT
-                                        `prod__implantation`.`prod_line`,
-                                        `prod__implantation`.`machine_id`,
-                                        `init__machine`.`designation`,
-                                        `prod__implantation`.`smartbox`,
-                                        `init__smartbox`.`position`,
-                                        `prod__implantation`.`cur_date`,
-                                        `prod__implantation`.`cur_time`
-                                    FROM
-                                        `prod__implantation`
-                                    /*INNER JOIN `init__prod_line` ON `prod__implantation`.`prod_line_id` = `init__prod_line`.`id` */
-                                    INNER JOIN `init__smartbox` ON `prod__implantation`.`smartbox` = `init__smartbox`.`smartbox`
-                                    INNER JOIN `init__machine` ON `init__machine`.`machine_id` = `prod__implantation`.`machine_id`;";
+                                        $sql = "
+                                        SELECT 
+                                            p.prod_line,
+                                            p.smartbox,
+                                            s.position,
+                                            p.cur_date,
+                                            p.cur_time
+                                        FROM prod__implantation p
+                                        INNER JOIN init__smartbox s
+                                            ON p.smartbox = s.smartbox
+                                        INNER JOIN (
+                                            -- Sous-requête pour récupérer le dernier ID pour chaque smartbox
+                                            SELECT smartbox, MAX(id) AS last_id
+                                            FROM prod__implantation
+                                            GROUP BY smartbox
+                                        ) AS last_entries
+                                            ON p.smartbox = last_entries.smartbox
+                                            AND p.id = last_entries.last_id;
+
+                                        ";
                                         $presence = mysqli_query($con, $sql);
                                         $pres = [];
                                         while ($item1 = $presence->fetch_assoc()) {

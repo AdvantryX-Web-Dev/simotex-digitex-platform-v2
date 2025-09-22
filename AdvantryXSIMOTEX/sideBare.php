@@ -92,9 +92,9 @@
             <div class="bg-white py-2 collapse-inner rounded">
                 <a class="collapse-item" href="rh.php">Opératrices</a>
                 <a class="collapse-item" href="presence.php">Présence</a>
-                <a class="collapse-item" href="performanceoperatrice.php">Récap journalier</a>
-                <a class="collapse-item" href="performanceparheure.php">Performances par Heure</a>
-                <a class="collapse-item" href="recapGroupe.php">Récap groupes</a>
+                <a class="collapse-item" href="performanceoperatrice.php">Rapport journalier</a>
+                <a class="collapse-item" href="performanceparheure.php">Rapport horaire</a>
+                <a class="collapse-item" href="recapGroupe.php">Rapport groupes</a>
 
             </div>
         </div>

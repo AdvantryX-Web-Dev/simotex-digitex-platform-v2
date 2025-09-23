@@ -96,7 +96,7 @@ session_start();
             <div class="metabase-container">
                 <div class="iframe-container">
                     <iframe
-                        src="http://192.168.1.31:3000/public/question/5587cdee-2cc2-43ac-8e6f-8ecfa248a53c"
+                        src="http://192.168.6.244:3000/public/question/233e06f9-6674-419c-93cd-28db2166b8fd"
                         class="metabase-iframe"
                         allowtransparency="true"
                         frameborder="0"

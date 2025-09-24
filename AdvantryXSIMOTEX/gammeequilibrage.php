@@ -41,7 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $sql = "SELECT `prod__gamme`.`operation_num`, `prod__gamme`.`designation`, `prod__gamme`.`unit_time`, `prod__gamme`.`qte_h`, `prod__gamme`.`machine_id`,
                                 `prod__gamme`.`smartbox`, `prod__gamme`.`main_sb`, `prod__gamme`.`model_id`, `prod__gamme`.`id`,
-                                `init__model`.`model` 
+                                `init__model`.`model`, `prod__gamme`.`opn_code` 
                                 FROM `prod__gamme` 
                                  INNER JOIN `init__model` ON `prod__gamme`.`model_id`= `init__model`.`id`
                                    ";
@@ -185,7 +185,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                 <tr>
 
                                                     <td>
-                                                        <?php echo $p3_gamme['operation_num']; ?>
+                                                        <?php echo $p3_gamme['opn_code'] ?? ''; ?>
                                                     </td>
                                                     <td>
                                                         <?php echo $p3_gamme['designation']; ?>
